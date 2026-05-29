@@ -8,48 +8,49 @@
 }
 .not-found::before {
   position: absolute;
-  inset: 10% 0 0;
+  inset: 8% 0 0;
   content: '';
   background:
-    radial-gradient(circle at 68% 48%, rgba(30,151,255,.12), transparent 27%),
-    repeating-linear-gradient(0deg, transparent 0 54px, rgba(93,121,139,.08) 55px),
-    repeating-linear-gradient(90deg, transparent 0 76px, rgba(93,121,139,.06) 77px);
+    radial-gradient(circle at 68% 48%, rgba(86, 143, 157, .09), transparent 27%),
+    radial-gradient(circle at 40% 63%, rgba(166, 114, 66, .04), transparent 22%),
+    repeating-linear-gradient(0deg, transparent 0 58px, rgba(132, 143, 142, .055) 59px),
+    repeating-linear-gradient(90deg, transparent 0 82px, rgba(132, 143, 142, .04) 83px);
   mask-image: linear-gradient(transparent, #000 25%, #000 72%, transparent);
 }
 .not-found__content {
   position: relative;
   z-index: 1;
-  width: min(46rem, 100%);
-  padding: clamp(2rem, 5vw, 4rem);
+  width: min(52rem, 100%);
+  padding: clamp(2.3rem, 5vw, 4.6rem);
   border: var(--hairline);
-  background: rgba(3,9,18,.74);
+  border-top-color: rgba(196,155,112,.35);
+  background: rgba(6, 9, 13, .72);
 }
 .not-found__code {
-  color: var(--blue-soft);
-  font: .72rem var(--mono);
-  letter-spacing: .18em;
+  color: var(--amber-soft);
+  font: .62rem var(--mono);
+  letter-spacing: .2em;
   text-transform: uppercase;
 }
 .not-found h1 {
-  margin: 1.1rem 0 1rem;
-  font: 400 clamp(3.6rem, 8vw, 6rem)/.9 var(--serif);
-  letter-spacing: -.045em;
+  margin: clamp(1.2rem, 2vw, 1.7rem) 0 1.15rem;
+  font: 400 clamp(3.8rem, 8vw, 6.8rem)/.9 var(--serif);
+  letter-spacing: -.052em;
 }
 .not-found h1 span {
-  color: var(--blue-soft);
-  text-shadow: 0 0 16px var(--blue-glow);
+  color: var(--amber-soft);
 }
 .not-found p {
-  max-width: 34rem;
+  max-width: 37rem;
   color: var(--text-muted);
-  font-size: .86rem;
-  line-height: 1.8;
+  font-size: .85rem;
+  line-height: 1.9;
 }
 .not-found__actions {
   display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
+  gap: 1.3rem;
+  margin-top: 2.4rem;
 }
 @media (max-width: 560px) {
-  .not-found__actions { display: grid; }
+  .not-found__actions { display: grid; justify-items: start; }
 }
