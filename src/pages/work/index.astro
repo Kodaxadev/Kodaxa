@@ -6,11 +6,16 @@ import SiteFooter from '../../components/SiteFooter.astro';
 import '../../styles/archive.css';
 
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
-const domains = ['Programmable Worlds', 'Agent Governance', 'Clarity Tools', 'Concepts'] as const;
+const domains = [
+  { title: 'Programmable Worlds', slug: 'programmable-worlds' },
+  { title: 'Agent Governance', slug: 'agent-governance' },
+  { title: 'Clarity Tools', slug: 'clarity-tools' },
+  { title: 'Concepts', slug: 'concepts' },
+] as const;
 const grouped = domains.map((domain, index) => ({
-  domain,
+  ...domain,
   index: String(index + 1).padStart(2, '0'),
-  projects: projects.filter((project) => project.data.domain === domain),
+  projects: projects.filter((project) => project.data.domain === domain.title),
 })).filter((group) => group.projects.length > 0);
 ---
 <BaseLayout title="Work Archive | Kodaxa Innovations" description="Systems built across programmable worlds, agent governance, and tools of clarity.">
@@ -29,10 +34,10 @@ const grouped = domains.map((domain, index) => ({
         </aside>
       </header>
       {grouped.map((group) => (
-        <section class="archive-domain" aria-label={group.domain}>
+        <section class="archive-domain" id={group.slug} aria-label={group.title}>
           <header class="archive-domain__head">
             <span>{group.index}</span>
-            <h2>{group.domain}</h2>
+            <h2>{group.title}</h2>
           </header>
           <div class="archive-cards">
             {group.projects.map((project) => (

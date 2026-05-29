@@ -13,11 +13,7 @@ import { projectCards } from '../data/site';
         <ProjectVisual image={project.image} label={project.mediaLabel} title={project.title} />
         <h3>{project.title}</h3>
         <p>{project.copy}</p>
-        {project.liveUrl ? (
-          <a href={project.liveUrl}>{project.action} →</a>
-        ) : (
-          <a href={`/work/${project.slug}`}>{project.action} →</a>
-        )}
+        <a href={`/work/${project.slug}`}>{project.action} →</a>
       </article>
     ))}
   </div>
