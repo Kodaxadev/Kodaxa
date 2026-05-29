@@ -4,7 +4,7 @@ type Point = {
   baseY: number;
   speed: number;
   phase: number;
-  glow: number;
+  emphasis: 'quiet' | 'proof' | 'policy';
 };
 
 const canvas = document.querySelector<HTMLCanvasElement>('#evidence-canvas');
@@ -16,7 +16,13 @@ if (canvas) {
   let frame = 0;
   let width = 0;
   let height = 0;
+  let animationId = 0;
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
+
+  const seeded = (seed: number) => {
+    const value = Math.sin(seed * 9187.23) * 43758.5453;
+    return value - Math.floor(value);
+  };
 
   const resize = () => {
     width = canvas.clientWidth;
@@ -25,18 +31,20 @@ if (canvas) {
     canvas.height = Math.floor(height * ratio);
     ctx?.setTransform(ratio, 0, 0, ratio, 0, 0);
     points.length = 0;
-    const count = Math.max(54, Math.floor(width / 18));
+    const count = Math.max(40, Math.min(76, Math.floor(width / 26)));
     for (let i = 0; i < count; i += 1) {
       const x = (i / (count - 1)) * width;
-      const ridge = height * 0.72 - Math.sin(i * 0.18) * height * 0.09;
-      const baseY = ridge + (Math.random() - 0.5) * height * 0.18;
+      const ridge = height * .66 - Math.sin(i * .16) * height * .075;
+      const baseY = ridge + (seeded(i + 11) - .5) * height * .13;
+      const proof = i === Math.floor(count * .52) || i === Math.floor(count * .76);
+      const policy = i === Math.floor(count * .64);
       points.push({
         x,
         y: baseY,
         baseY,
-        speed: 0.004 + Math.random() * 0.008,
-        phase: Math.random() * Math.PI * 2,
-        glow: Math.random(),
+        speed: .0015 + seeded(i + 101) * .0022,
+        phase: seeded(i + 47) * Math.PI * 2,
+        emphasis: policy ? 'policy' : proof ? 'proof' : 'quiet',
       });
     }
   };
@@ -47,52 +55,63 @@ if (canvas) {
     ctx.clearRect(0, 0, width, height);
 
     for (const point of points) {
-      if (!reducedMotion) {
-        point.y = point.baseY + Math.sin(frame * point.speed + point.phase) * 14;
-      }
+      point.y = reducedMotion ? point.baseY : point.baseY + Math.sin(frame * point.speed + point.phase) * 4.2;
     }
 
-    ctx.lineWidth = 0.7;
-    for (let layer = 0; layer < 5; layer += 1) {
+    ctx.lineWidth = .65;
+    for (let layer = 0; layer < 4; layer += 1) {
       ctx.beginPath();
-      for (let i = 0; i < points.length; i += 1) {
-        const point = points[i];
-        const y = point.y + layer * 19 + Math.sin(i * 0.5 + layer) * 8;
-        if (i === 0) ctx.moveTo(point.x, y);
+      points.forEach((point, index) => {
+        const y = point.y + layer * 22 + Math.sin(index * .38 + layer) * 5;
+        if (index === 0) ctx.moveTo(point.x, y);
         else ctx.lineTo(point.x, y);
-      }
-      ctx.strokeStyle = `rgba(72, 138, 198, ${0.28 - layer * 0.035})`;
+      });
+      ctx.strokeStyle = `rgba(111, 137, 143, ${.18 - layer * .032})`;
       ctx.stroke();
     }
 
     points.forEach((point, index) => {
-      for (let jump = 1; jump < 5; jump += 1) {
-        const next = points[index + jump];
-        if (!next) continue;
-        const alpha = 0.14 - jump * 0.022;
+      const neighbor = points[index + 1];
+      const bridge = points[index + 4];
+      if (neighbor) {
         ctx.beginPath();
         ctx.moveTo(point.x, point.y);
-        ctx.lineTo(next.x, next.y + ((jump % 2) * 36));
-        ctx.strokeStyle = `rgba(126, 167, 209, ${alpha})`;
+        ctx.lineTo(neighbor.x, neighbor.y);
+        ctx.strokeStyle = 'rgba(126, 149, 154, .12)';
         ctx.stroke();
       }
-      const bright = point.glow > 0.93;
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, bright ? 2.1 : 0.8, 0, Math.PI * 2);
-      ctx.fillStyle = bright ? '#248eff' : 'rgba(186, 217, 238, .62)';
-      ctx.fill();
-      if (bright) {
+      if (bridge && index % 3 === 0) {
         ctx.beginPath();
-        ctx.arc(point.x, point.y, 12, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(20, 125, 255, .13)';
+        ctx.moveTo(point.x, point.y);
+        ctx.lineTo(bridge.x, bridge.y + 42);
+        ctx.strokeStyle = 'rgba(126, 149, 154, .065)';
+        ctx.stroke();
+      }
+
+      const isPolicy = point.emphasis === 'policy';
+      const isProof = point.emphasis === 'proof';
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, isPolicy || isProof ? 2.15 : .72, 0, Math.PI * 2);
+      ctx.fillStyle = isPolicy ? '#bd966d' : isProof ? '#83afba' : 'rgba(194, 198, 193, .48)';
+      ctx.fill();
+      if (isPolicy || isProof) {
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 14, 0, Math.PI * 2);
+        ctx.fillStyle = isPolicy ? 'rgba(166, 114, 66, .07)' : 'rgba(78, 132, 150, .08)';
         ctx.fill();
       }
     });
 
-    if (!reducedMotion) requestAnimationFrame(render);
+    if (!reducedMotion) animationId = requestAnimationFrame(render);
+  };
+
+  const onResize = () => {
+    if (animationId) cancelAnimationFrame(animationId);
+    resize();
+    render();
   };
 
   resize();
   render();
-  window.addEventListener('resize', resize, { passive: true });
+  window.addEventListener('resize', onResize, { passive: true });
 }
