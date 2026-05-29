@@ -53,6 +53,44 @@
   font: 400 .72rem/1.7 var(--mono);
   text-transform: uppercase;
 }
+.case-media {
+  margin: clamp(1.6rem, 3vw, 2.25rem) 0 2rem;
+}
+.case-media__frame {
+  overflow: hidden;
+  border: var(--hairline);
+  background: #06101a;
+}
+.case-media img {
+  display: block;
+  width: 100%;
+  max-height: min(52vw, 44rem);
+  object-fit: cover;
+  object-position: top center;
+}
+.case-media figcaption {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 1.5rem;
+  padding: .9rem 1.05rem;
+  border: var(--hairline);
+  border-top: 0;
+}
+.case-media figcaption span {
+  flex: none;
+  color: var(--blue-soft);
+  font: .6rem/1.25 var(--mono);
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+.case-media figcaption p {
+  max-width: 52rem;
+  color: var(--text-muted);
+  font-size: .71rem;
+  line-height: 1.65;
+  text-align: right;
+}
 .architecture-flow {
   display: grid;
   grid-template-columns: repeat(7, auto);
@@ -125,4 +163,6 @@
 @media (max-width: 600px) {
   .case-actions { display: grid; }
   .case-hero h1 { font-size: 3.6rem; }
+  .case-media figcaption { display: block; }
+  .case-media figcaption p { margin-top: .65rem; text-align: left; }
 }

@@ -1,11 +1,12 @@
 ---
 import Brand from './Brand.astro';
 const pathname = Astro.url.pathname;
+const workActive = pathname === '/' || pathname.startsWith('/work');
 const nav = [
-  { label: 'Work', href: '/#work' },
+  { label: 'Work', href: '/work' },
   { label: 'Philosophy', href: '/#philosophy' },
   { label: 'About', href: '/#about' },
-  { label: 'Archive', href: '/#archive' },
+  { label: 'Archive', href: '/work#archive' },
   { label: 'Contact', href: '/#contact' },
 ];
 ---
@@ -13,9 +14,9 @@ const nav = [
   <Brand />
   <nav aria-label="Primary">
     {nav.map((item) => (
-      <a class={pathname === '/' && item.label === 'Work' ? 'is-active' : ''} href={item.href}>{item.label}</a>
+      <a class={item.label === 'Work' && workActive ? 'is-active' : undefined} href={item.href}>{item.label}</a>
     ))}
   </nav>
   <p class="header-index"><span>01</span> Evidence into action.<i aria-hidden="true"></i></p>
-  <a class="menu-button" href="#work" aria-label="Skip to work"><span></span><span></span><span></span></a>
+  <a class="menu-button" href="/work" aria-label="Open work archive"><span></span><span></span><span></span></a>
 </header>

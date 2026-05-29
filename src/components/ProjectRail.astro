@@ -4,13 +4,13 @@ import { projectCards } from '../data/site';
 ---
 <section class="work-rail" id="work">
   <div class="section-header">
-    <p class="section-label">More systems</p>
-    <a href="#archive">View all work →</a>
+    <p class="section-label">Selected systems</p>
+    <a href="/work#archive">View archive →</a>
   </div>
   <div class="project-grid">
     {projectCards.map((project) => (
       <article class="project-card">
-        <ProjectVisual kind={project.kind} />
+        <ProjectVisual image={project.image} label={project.mediaLabel} title={project.title} />
         <h3>{project.title}</h3>
         <p>{project.copy}</p>
         {project.liveUrl ? (

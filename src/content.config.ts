@@ -15,6 +15,12 @@ const projects = defineCollection({
     repository: z.url(),
     liveUrl: z.url().optional(),
     stack: z.array(z.string()),
+    media: z.object({
+      src: z.string(),
+      label: z.enum(['Product board', 'Design target', 'System plate', 'Concept plate']),
+      alt: z.string(),
+      note: z.string(),
+    }).optional(),
   }),
 });
 
