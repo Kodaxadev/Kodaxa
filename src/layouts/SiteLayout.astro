@@ -1,0 +1,14 @@
+---
+import PageShell from './PageShell.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+const {
+  title = 'Kodaxa Innovations — Systems for uncertain worlds',
+  description = 'Trust infrastructure, agent governance, and tools that make consequential decisions legible.',
+} = Astro.props;
+---
+<PageShell title={title} description={description} />
+<slot />
