@@ -1,0 +1,40 @@
+<svg width="1200" height="680" viewBox="0 0 1200 680" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Signal Vault dossier view</title>
+  <desc id="desc">A composed Signal Vault dossier screen with entity context, signal timeline, staleness, and route warnings.</desc>
+  <rect width="1200" height="680" fill="#090B0E"/>
+  <rect x="34" y="34" width="1132" height="612" rx="10" fill="#11151A" stroke="#34424B"/>
+  <rect x="64" y="64" width="1072" height="54" fill="#171C22" stroke="#3B4650"/>
+  <text x="88" y="99" fill="#F3F6F7" font-family="Consolas, monospace" font-size="24" font-weight="800">OQQ-0R8 / SYSTEM DOSSIER</text>
+  <text x="880" y="98" fill="#5FE1C0" font-family="Consolas, monospace" font-size="15">WORLD API + LOCAL SIGNALS</text>
+  <g transform="translate(64 146)">
+    <rect width="326" height="438" fill="#0D1014" stroke="#34424B"/>
+    <text x="24" y="38" fill="#D8E2E7" font-family="Consolas, monospace" font-size="18" font-weight="700">ENTITY HEALTH</text>
+    <text x="24" y="78" fill="#8EA3AE" font-family="Consolas, monospace" font-size="14">Classification</text>
+    <text x="190" y="78" fill="#F3F6F7" font-family="Consolas, monospace" font-size="15">System</text>
+    <text x="24" y="112" fill="#8EA3AE" font-family="Consolas, monospace" font-size="14">Source</text>
+    <text x="190" y="112" fill="#5FE1C0" font-family="Consolas, monospace" font-size="15">world_api</text>
+    <text x="24" y="146" fill="#8EA3AE" font-family="Consolas, monospace" font-size="14">Confidence</text>
+    <text x="190" y="146" fill="#F3F6F7" font-family="Consolas, monospace" font-size="15">Observed</text>
+    <rect x="24" y="184" width="278" height="8" fill="#252B32"/><rect x="24" y="184" width="220" height="8" fill="#5FE1C0"/>
+    <text x="24" y="226" fill="#D8E2E7" font-family="Consolas, monospace" font-size="17" font-weight="700">INTEL STATE</text>
+    <text x="24" y="260" fill="#FF6B2B" font-family="Consolas, monospace" font-size="15">2 stale threat reports</text>
+    <text x="24" y="292" fill="#F4C15D" font-family="Consolas, monospace" font-size="15">1 route contradiction</text>
+    <text x="24" y="324" fill="#5FE1C0" font-family="Consolas, monospace" font-size="15">5 fresh local signals</text>
+  </g>
+  <g transform="translate(418 146)">
+    <rect width="434" height="438" fill="#0D1014" stroke="#34424B"/>
+    <text x="24" y="38" fill="#D8E2E7" font-family="Consolas, monospace" font-size="18" font-weight="700">SIGNAL TIMELINE</text>
+    <g font-family="Consolas, monospace" font-size="15">
+      <rect x="24" y="64" width="386" height="70" fill="#14191F" stroke="#39434C"/><text x="44" y="94" fill="#FF6B2B" font-weight="700">Hostile Contact</text><text x="270" y="94" fill="#8EA3AE">41m ago</text><text x="44" y="118" fill="#C9D5DA">Observed near outbound gate.</text>
+      <rect x="24" y="154" width="386" height="70" fill="#101418" stroke="#39434C"/><text x="44" y="184" fill="#5FE1C0" font-weight="700">Route Report</text><text x="270" y="184" fill="#8EA3AE">2h ago</text><text x="44" y="208" fill="#C9D5DA">Safe route has one stale hop.</text>
+      <rect x="24" y="244" width="386" height="70" fill="#101418" stroke="#39434C"/><text x="44" y="274" fill="#F4C15D" font-weight="700">Storage Manifest</text><text x="270" y="274" fill="#8EA3AE">1d ago</text><text x="44" y="298" fill="#C9D5DA">Fuel note needs reconfirmation.</text>
+    </g>
+  </g>
+  <g transform="translate(880 146)">
+    <rect width="256" height="438" fill="#0D1014" stroke="#34424B"/>
+    <text x="22" y="38" fill="#D8E2E7" font-family="Consolas, monospace" font-size="18" font-weight="700">ACTIONS</text>
+    <rect x="22" y="66" width="212" height="44" rx="5" fill="#FF4F17"/><text x="48" y="94" fill="#090B0E" font-family="Consolas, monospace" font-size="15" font-weight="800">LOG FIELD NOTE</text>
+    <rect x="22" y="126" width="212" height="44" rx="5" fill="#151B20" stroke="#5FE1C0"/><text x="48" y="154" fill="#5FE1C0" font-family="Consolas, monospace" font-size="15" font-weight="800">PUSH SINGLE SIGNAL</text>
+    <rect x="22" y="206" width="212" height="142" fill="#090B0E" stroke="#34424B"/><text x="42" y="238" fill="#F4C15D" font-family="Consolas, monospace" font-size="15" font-weight="700">ROUTE WARNING</text><text x="42" y="268" fill="#C9D5DA" font-family="Consolas, monospace" font-size="14">Intel disagrees</text><text x="42" y="292" fill="#C9D5DA" font-family="Consolas, monospace" font-size="14">with last pass.</text>
+  </g>
+</svg>
