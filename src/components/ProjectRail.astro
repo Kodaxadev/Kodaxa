@@ -1,0 +1,24 @@
+---
+import ProjectVisual from './ProjectVisual.astro';
+import { projectCards } from '../data/site';
+---
+<section class="work-rail" id="work">
+  <div class="section-header">
+    <p class="section-label">More systems</p>
+    <a href="#archive">View all work →</a>
+  </div>
+  <div class="project-grid">
+    {projectCards.map((project) => (
+      <article class="project-card">
+        <ProjectVisual kind={project.kind} />
+        <h3>{project.title}</h3>
+        <p>{project.copy}</p>
+        {project.liveUrl ? (
+          <a href={project.liveUrl}>{project.action} →</a>
+        ) : (
+          <a href={`/work/${project.slug}`}>{project.action} →</a>
+        )}
+      </article>
+    ))}
+  </div>
+</section>
