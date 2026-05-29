@@ -1,0 +1,17 @@
+---
+import DomainIcon from './DomainIcon.astro';
+import { domains } from '../data/site';
+---
+<section class="domains" id="philosophy" aria-label="Domains of work">
+  {domains.map((domain) => (
+    <article class="domain">
+      <DomainIcon type={domain.icon} />
+      <div>
+        <span class="domain-number">{domain.number}</span>
+        <h2>{domain.title}</h2>
+        <p>{domain.description}</p>
+        <a href="#work">Explore <span>→</span></a>
+      </div>
+    </article>
+  ))}
+</section>
