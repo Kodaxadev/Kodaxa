@@ -1,123 +1,131 @@
 .case-study {
-  padding: clamp(1.5rem, 3vw, 3rem) var(--pad) 0;
+  padding: clamp(2.1rem, 4vw, 4.4rem) var(--pad) 0;
 }
 .case-hero {
   display: grid;
-  grid-template-columns: minmax(20rem, 1fr) minmax(20rem, .8fr);
-  gap: clamp(2rem, 5vw, 7rem);
-  padding: clamp(2rem, 4vw, 3.5rem) 0;
+  grid-template-columns: minmax(22rem, 1fr) minmax(18rem, .62fr);
+  gap: clamp(2.5rem, 7vw, 9rem);
+  padding: clamp(1.5rem, 3vw, 2.7rem) 0 clamp(2.8rem, 5vw, 4.5rem);
   border-bottom: var(--hairline);
 }
 .case-hero h1 {
-  font: 400 clamp(3.8rem, 6.8vw, 7rem)/.94 var(--serif);
-  letter-spacing: -.04em;
-  margin: .8rem 0 1.4rem;
+  margin: clamp(1.2rem, 2vw, 1.8rem) 0 clamp(1.4rem, 2.3vw, 2rem);
+  font: 400 clamp(4.2rem, 7.2vw, 8.3rem)/.9 var(--serif);
+  letter-spacing: -.052em;
 }
 .case-hero h1 span {
-  color: var(--blue-soft);
-  text-shadow: 0 0 16px var(--blue-glow);
+  color: var(--amber-soft);
 }
 .case-summary {
-  max-width: 38rem;
+  max-width: 42rem;
   color: var(--text-soft);
-  font: .87rem/1.9 var(--mono);
+  font: .78rem/2.05 var(--mono);
+  letter-spacing: .13em;
   text-transform: uppercase;
-  letter-spacing: .075em;
 }
 .case-actions {
   display: flex;
-  gap: 1rem;
-  margin-top: 2.3rem;
+  gap: clamp(1.05rem, 2vw, 1.75rem);
+  align-items: center;
+  margin-top: clamp(2.1rem, 3vw, 2.8rem);
 }
-.action-button--quiet { border-color: var(--line-bright); }
 .case-meta {
   align-self: end;
-  border: var(--hairline);
-  padding: 1.45rem;
+  padding: 0;
+  border-top: 1px solid rgba(196,155,112,.4);
 }
 .case-meta div {
-  padding: .75rem 0;
+  display: grid;
+  grid-template-columns: 6.25rem 1fr;
+  gap: 1rem;
+  padding: 1rem .2rem;
   border-bottom: var(--hairline);
 }
-.case-meta div:last-child { border-bottom: 0; }
 .case-meta span {
   display: block;
-  color: var(--blue-soft);
-  font: .58rem/1 var(--mono);
+  margin: 0;
+  color: var(--amber-soft);
+  font: .53rem/1.7 var(--mono);
+  letter-spacing: .17em;
   text-transform: uppercase;
-  letter-spacing: .1em;
-  margin-bottom: .55rem;
 }
 .case-meta strong {
   color: var(--text-soft);
-  font: 400 .72rem/1.7 var(--mono);
+  font: 400 .65rem/1.7 var(--mono);
+  letter-spacing: .1em;
   text-transform: uppercase;
 }
 .case-media {
-  margin: clamp(1.6rem, 3vw, 2.25rem) 0 2rem;
+  margin: clamp(2.5rem, 5vw, 4.6rem) 0 clamp(2rem, 4vw, 3.6rem);
 }
 .case-media__frame {
   overflow: hidden;
   border: var(--hairline);
-  background: #06101a;
+  background: var(--bg-soft);
 }
 .case-media img {
   display: block;
   width: 100%;
-  max-height: min(52vw, 44rem);
+  max-height: min(56vw, 50rem);
   object-fit: cover;
   object-position: top center;
+  opacity: .93;
+  filter: saturate(.72) contrast(1.025);
 }
 .case-media figcaption {
   display: flex;
   justify-content: space-between;
   align-items: start;
-  gap: 1.5rem;
-  padding: .9rem 1.05rem;
+  gap: 2.2rem;
+  padding: 1rem 1.1rem;
   border: var(--hairline);
   border-top: 0;
 }
 .case-media figcaption span {
   flex: none;
-  color: var(--blue-soft);
-  font: .6rem/1.25 var(--mono);
-  letter-spacing: .11em;
+  color: var(--amber-soft);
+  font: .54rem/1.4 var(--mono);
+  letter-spacing: .19em;
   text-transform: uppercase;
 }
 .case-media figcaption p {
-  max-width: 52rem;
+  max-width: 57rem;
   color: var(--text-muted);
-  font-size: .71rem;
-  line-height: 1.65;
+  font: .68rem/1.75 var(--mono);
+  letter-spacing: .06em;
   text-align: right;
+  text-transform: uppercase;
 }
 .architecture-flow {
   display: grid;
   grid-template-columns: repeat(7, auto);
-  gap: clamp(.5rem, 1.2vw, 1.3rem);
+  gap: clamp(.55rem, 1.4vw, 1.5rem);
   align-items: center;
-  padding: clamp(1.4rem, 3vw, 2.2rem);
-  margin: 2rem 0;
+  padding: clamp(1.6rem, 3.2vw, 2.6rem);
+  margin: clamp(2rem, 3.5vw, 3.2rem) 0;
   border: var(--hairline);
+  background: rgba(9,14,18,.28);
 }
 .architecture-flow article {
-  min-height: 7.6rem;
+  min-height: 8.1rem;
+  padding: 1.1rem;
   border: var(--hairline);
-  padding: 1rem;
 }
 .architecture-flow article span {
-  color: var(--blue-soft);
-  font: .6rem var(--mono);
+  color: var(--amber-soft);
+  font: .55rem var(--mono);
+  letter-spacing: .13em;
 }
 .architecture-flow h3 {
-  font: .72rem/1 var(--mono);
+  margin: 1.15rem 0 .78rem;
+  font: .67rem/1 var(--mono);
+  letter-spacing: .12em;
   text-transform: uppercase;
-  margin: 1rem 0 .7rem;
 }
 .architecture-flow p {
   color: var(--text-muted);
-  font-size: .67rem;
-  line-height: 1.65;
+  font-size: .68rem;
+  line-height: 1.7;
 }
 .architecture-flow > i {
   color: var(--blue-soft);
@@ -125,32 +133,37 @@
 }
 .case-content {
   display: grid;
-  max-width: 68rem;
-  grid-template-columns: repeat(2, minmax(16rem, 1fr));
-  gap: clamp(1.5rem, 3vw, 3.5rem);
-  padding: clamp(1.7rem, 3vw, 3rem) 0;
+  max-width: 76rem;
+  grid-template-columns: repeat(2, minmax(17rem, 1fr));
+  gap: clamp(2.5rem, 5vw, 5.6rem);
+  padding: clamp(2.8rem, 5vw, 4.5rem) 0;
 }
 .case-content h2 {
-  font: 400 clamp(1.8rem, 2.4vw, 2.4rem)/1 var(--serif);
+  margin: 0 0 1.15rem;
   color: var(--text);
-  margin: 0 0 1rem;
+  font: 400 clamp(2rem, 2.6vw, 2.65rem)/1 var(--serif);
 }
 .case-content p {
+  margin: 0 0 2.6rem;
   color: var(--text-muted);
-  font-size: .85rem;
-  line-height: 1.8;
-  margin: 0 0 2.2rem;
+  font-size: .84rem;
+  line-height: 1.95;
 }
 .case-end {
   display: flex;
   justify-content: space-between;
   border-top: var(--hairline);
-  padding: 1.5rem 0 2.4rem;
-  font: .68rem var(--mono);
+  padding: 1.75rem 0 2.9rem;
   color: var(--text-muted);
+  font: .62rem var(--mono);
+  letter-spacing: .15em;
   text-transform: uppercase;
 }
-.case-end a { color: var(--blue-soft); }
+.case-end a {
+  color: var(--text-soft);
+  transition: color 180ms ease;
+}
+.case-end a:hover { color: var(--amber-soft); }
 @media (max-width: 920px) {
   .case-hero,
   .case-content { grid-template-columns: 1fr; }
@@ -161,8 +174,9 @@
   }
 }
 @media (max-width: 600px) {
-  .case-actions { display: grid; }
-  .case-hero h1 { font-size: 3.6rem; }
+  .case-actions { display: grid; justify-items: start; }
+  .case-hero h1 { font-size: clamp(3.35rem, 16vw, 4.4rem); }
+  .case-meta div { grid-template-columns: 1fr; gap: .5rem; }
   .case-media figcaption { display: block; }
-  .case-media figcaption p { margin-top: .65rem; text-align: left; }
+  .case-media figcaption p { margin-top: .75rem; text-align: left; }
 }
