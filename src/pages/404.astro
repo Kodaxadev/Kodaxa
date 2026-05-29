@@ -1,0 +1,23 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import '../styles/not-found.css';
+---
+<BaseLayout title="System not found | Kodaxa Innovations" description="The requested system record could not be resolved.">
+  <main class="site-frame">
+    <SiteHeader />
+    <section class="not-found" aria-label="Page not found">
+      <div class="not-found__content">
+        <p class="not-found__code">Error 404 / Context unresolved</p>
+        <h1>Signal not found<span>.</span></h1>
+        <p>The requested route does not map to a current system record. Return to the selected work or browse the complete archive.</p>
+        <div class="not-found__actions">
+          <a class="action-button" href="/">Return home →</a>
+          <a class="action-button action-button--quiet" href="/work">Browse work →</a>
+        </div>
+      </div>
+    </section>
+    <SiteFooter />
+  </main>
+</BaseLayout>
