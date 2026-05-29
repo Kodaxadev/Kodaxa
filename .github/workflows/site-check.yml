@@ -1,0 +1,27 @@
+name: Kodaxa Site Check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - build/evidence-engine-homepage
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Validate static site
+        run: npm run check
