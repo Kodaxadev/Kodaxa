@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import Hero from '../components/Hero.astro';
+import Domains from '../components/Domains.astro';
+import FeaturedSystem from '../components/FeaturedSystem.astro';
+import ProjectRail from '../components/ProjectRail.astro';
+import ConceptStrip from '../components/ConceptStrip.astro';
+import Principles from '../components/Principles.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import '../styles/home.css';
+import '../styles/home-panels.css';
+---
+<BaseLayout>
+  <main class="site-frame">
+    <SiteHeader />
+    <div class="homepage-grid">
+      <Hero />
+      <Domains />
+      <FeaturedSystem />
+      <ProjectRail />
+      <ConceptStrip />
+      <Principles />
+    </div>
+    <SiteFooter />
+  </main>
+  <script>
+    import '../scripts/reveal';
+  </script>
+</BaseLayout>
