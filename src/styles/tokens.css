@@ -1,0 +1,21 @@
+:root {
+  --bg: #030912;
+  --bg-soft: #07111c;
+  --bg-panel: rgba(5, 15, 25, 0.72);
+  --bg-panel-strong: rgba(3, 12, 21, 0.94);
+  --line: rgba(128, 153, 170, 0.25);
+  --line-bright: rgba(76, 150, 211, 0.44);
+  --text: #edf0ed;
+  --text-soft: #bdc7ca;
+  --text-muted: #7c8b94;
+  --blue: #1e97ff;
+  --blue-soft: #74c6ff;
+  --blue-glow: rgba(24, 137, 255, 0.38);
+  --success: #54b482;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'Inter Variable', Inter, Arial, sans-serif;
+  --mono: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+  --max: 1880px;
+  --pad: clamp(1.15rem, 2.5vw, 2.75rem);
+  --hairline: 1px solid var(--line);
+}
