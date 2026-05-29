@@ -1,11 +1,12 @@
 ---
-interface Props { kind: 'map' | 'code' | 'radar' | 'graph' | 'matrix' }
-const { kind } = Astro.props;
+interface Props {
+  image: string;
+  label: string;
+  title: string;
+}
+const { image, label, title } = Astro.props;
 ---
-<div class={`project-visual project-visual--${kind}`} aria-hidden="true">
-  {kind === 'map' && <><i></i><i></i><i></i><span></span></>}
-  {kind === 'code' && <><b></b><b></b><b></b><b></b><b></b></>}
-  {kind === 'radar' && <><span></span><i></i><b></b></>}
-  {kind === 'graph' && <svg viewBox="0 0 140 72"><path d="M6 60 28 47l17 5 17-32 18 19 22-27 33 18" /></svg>}
-  {kind === 'matrix' && <><b></b><b></b><b></b><b></b><b></b><b></b></>}
-</div>
+<figure class="project-visual">
+  <img src={image} alt={`${title} — ${label}`} loading="lazy" />
+  <figcaption>{label}</figcaption>
+</figure>
