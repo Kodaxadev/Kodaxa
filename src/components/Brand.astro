@@ -1,0 +1,7 @@
+---
+interface Props { compact?: boolean }
+const { compact = false } = Astro.props;
+---
+<a class:list={['brand', compact && 'brand--compact']} href="/" aria-label="Kodaxa Innovations home">
+  <img src="/assets/brand/kodaxa-header.svg" alt="Kodaxa Innovations" width="780" height="220" />
+</a>
