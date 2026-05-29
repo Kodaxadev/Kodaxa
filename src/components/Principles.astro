@@ -1,0 +1,12 @@
+---
+import { principles } from '../data/site';
+---
+<section class="principles" id="about">
+  {principles.map((principle, index) => (
+    <article>
+      <span class="principle-mark">{String(index + 1).padStart(2, '0')}</span>
+      <h2>{principle.title}</h2>
+      <p>{principle.copy}</p>
+    </article>
+  ))}
+</section>
