@@ -1,0 +1,52 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+import ArchitectureFlow from '../../components/ArchitectureFlow.astro';
+import '../../styles/project.css';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((project) => ({
+    params: { id: project.id },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+const data = project.data;
+---
+<BaseLayout title={`${data.title} | Kodaxa Innovations`} description={data.summary}>
+  <main class="site-frame">
+    <SiteHeader />
+    <article class="case-study">
+      <header class="case-hero">
+        <div>
+          <p class="section-label">{data.eyebrow}</p>
+          <h1>{data.title}<span>.</span></h1>
+          <p class="case-summary">{data.summary}</p>
+          <div class="case-actions">
+            {data.liveUrl && <a class="action-button" href={data.liveUrl}>Launch app →</a>}
+            <a class="action-button action-button--quiet" href={data.repository}>View repository ↗</a>
+          </div>
+        </div>
+        <aside class="case-meta">
+          <div><span>Domain</span><strong>{data.domain}</strong></div>
+          <div><span>Status</span><strong>{data.status}</strong></div>
+          <div><span>Stack</span><strong>{data.stack.join(' · ')}</strong></div>
+        </aside>
+      </header>
+      {project.id === 'frontierwarden' && <ArchitectureFlow />}
+      <section class="case-content">
+        <Content />
+      </section>
+      <footer class="case-end">
+        <p>Built on evidence. Not claims.</p>
+        <a href="/#work">Return to systems →</a>
+      </footer>
+    </article>
+    <SiteFooter />
+  </main>
+</BaseLayout>
