@@ -1,0 +1,23 @@
+---
+title: EF-Atlas
+eyebrow: Knowledge infrastructure
+summary: Authority-tiered knowledge corpus and API for EVE Frontier builders and agents.
+domain: Programmable Worlds
+status: Deployed
+featured: true
+order: 3
+repository: https://github.com/Kodaxadev/EF-Atlas
+liveUrl: https://atlas.kodaxa.dev
+stack: [Python, FastAPI, SQLite, FTS5, JSON API]
+---
+## The problem
+
+Builders and AI agents need to search distributed Frontier documentation while distinguishing official truth from community reference material.
+
+## What was built
+
+EF-Atlas ingests official documents, tooling repositories, API specifications, and carefully labeled community references into a searchable corpus. Each record retains an authority tier and source metadata, with web browsing, export, and agent-oriented context endpoints.
+
+## Boundary
+
+Authority tiers are a provenance control, not a claim that community records are canonical. Source hierarchy remains visible so users and agents can decide what evidence supports a conclusion.
