@@ -10,7 +10,7 @@ import { domains } from '../data/site';
         <span class="domain-number">{domain.number}</span>
         <h2>{domain.title}</h2>
         <p>{domain.description}</p>
-        <a href="#work">Explore <span>→</span></a>
+        <a href={`/work#${domain.slug}`}>Explore <span>→</span></a>
       </div>
     </article>
   ))}
