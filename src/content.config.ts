@@ -17,7 +17,7 @@ const projects = defineCollection({
     stack: z.array(z.string()),
     media: z.object({
       src: z.string(),
-      label: z.enum(['Product board', 'Design target', 'System plate']),
+      label: z.enum(['Product board', 'Design target', 'System plate', 'Concept plate']),
       alt: z.string(),
       note: z.string(),
     }).optional(),
