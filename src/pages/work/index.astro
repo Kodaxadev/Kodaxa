@@ -1,0 +1,67 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+import '../../styles/archive.css';
+
+const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+const domains = ['Programmable Worlds', 'Agent Governance', 'Clarity Tools', 'Concepts'] as const;
+const grouped = domains.map((domain, index) => ({
+  domain,
+  index: String(index + 1).padStart(2, '0'),
+  projects: projects.filter((project) => project.data.domain === domain),
+})).filter((group) => group.projects.length > 0);
+---
+<BaseLayout title="Work Archive | Kodaxa Innovations" description="Systems built across programmable worlds, agent governance, and tools of clarity.">
+  <main class="site-frame">
+    <SiteHeader />
+    <article class="archive-page" id="archive">
+      <header class="archive-hero">
+        <div>
+          <p class="section-label">Work archive</p>
+          <h1>Built systems<span>.</span></h1>
+          <p class="archive-intro">A selected archive of infrastructure, governance layers, and clarity tools. Every project is classified by its current state and evidence.</p>
+        </div>
+        <aside class="archive-note">
+          <h2>Built on evidence, not claims.</h2>
+          <p>Live applications, testnet infrastructure, alpha products, technical tools, and concept studies are separated intentionally.</p>
+        </aside>
+      </header>
+      {grouped.map((group) => (
+        <section class="archive-domain" aria-label={group.domain}>
+          <header class="archive-domain__head">
+            <span>{group.index}</span>
+            <h2>{group.domain}</h2>
+          </header>
+          <div class="archive-cards">
+            {group.projects.map((project) => (
+              <article class="archive-card">
+                <div class="archive-card__media">
+                  {project.data.media ? (
+                    <>
+                      <img src={project.data.media.src} alt={project.data.media.alt} loading="lazy" />
+                      <span class="archive-card__label">{project.data.media.label}</span>
+                    </>
+                  ) : (
+                    <div class="archive-card__fallback" aria-hidden="true">◇</div>
+                  )}
+                </div>
+                <div class="archive-card__body">
+                  <p class="archive-card__meta"><span>{project.data.status}</span><span>{project.data.domain}</span></p>
+                  <h3>{project.data.title}</h3>
+                  <p>{project.data.summary}</p>
+                </div>
+                <div class="archive-card__actions">
+                  <a href={`/work/${project.id}`}>Case study →</a>
+                  {project.data.liveUrl && <a href={project.data.liveUrl}>Live ↗</a>}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
+    </article>
+    <SiteFooter />
+  </main>
+</BaseLayout>
