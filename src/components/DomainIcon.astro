@@ -1,0 +1,23 @@
+---
+interface Props { type: 'nodes' | 'shield' | 'triangle' }
+const { type } = Astro.props;
+---
+{type === 'nodes' && (
+  <svg class="domain-icon" viewBox="0 0 50 50" aria-hidden="true">
+    <path d="M25 4 43 15v20L25 46 7 35V15Z M25 4v42M7 15l36 20M43 15 7 35" />
+    <circle cx="25" cy="4" r="2" /><circle cx="43" cy="15" r="2" /><circle cx="43" cy="35" r="2" />
+    <circle cx="25" cy="46" r="2" /><circle cx="7" cy="35" r="2" /><circle cx="7" cy="15" r="2" />
+  </svg>
+)}
+{type === 'shield' && (
+  <svg class="domain-icon" viewBox="0 0 50 50" aria-hidden="true">
+    <path d="M25 4 43 11v14c0 10-7 17-18 21C14 42 7 35 7 25V11Z M25 11 36 15v10c0 6-4 10-11 14-7-4-11-8-11-14V15Z" />
+    <path d="M25 11v28M14 20h22" />
+  </svg>
+)}
+{type === 'triangle' && (
+  <svg class="domain-icon" viewBox="0 0 50 50" aria-hidden="true">
+    <path d="M25 5 45 42H5Z M25 14 36 36H14Z M25 5v31" />
+    <circle cx="25" cy="23" r="3" />
+  </svg>
+)}
