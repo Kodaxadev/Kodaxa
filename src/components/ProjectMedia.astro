@@ -1,0 +1,19 @@
+---
+interface Media {
+  src: string;
+  label: string;
+  alt: string;
+  note: string;
+}
+interface Props { media: Media }
+const { media } = Astro.props;
+---
+<figure class="case-media">
+  <div class="case-media__frame">
+    <img src={media.src} alt={media.alt} loading="eager" />
+  </div>
+  <figcaption>
+    <span>{media.label}</span>
+    <p>{media.note}</p>
+  </figcaption>
+</figure>
