@@ -1,0 +1,26 @@
+---
+title: FrontierWarden
+eyebrow: Featured system
+summary: Proof-backed trust and credit-risk infrastructure for EVE Frontier operators.
+domain: Programmable Worlds
+status: Live on Stillness / testnet
+featured: true
+order: 1
+repository: https://github.com/Kodaxadev/FrontierWarden
+stack: [Sui Move, Rust, Axum, PostgreSQL, React, TypeScript]
+---
+## The problem
+
+EVE Frontier operators need to make gate, counterparty, credit, and policy decisions without collapsing evidence into a black-box reputation score.
+
+## What was built
+
+FrontierWarden combines on-chain attestations, indexed projections, killmail context, gate-policy state, and tenant-owned rules into explainable trust evaluations. Its repository includes Sui Move protocol modules, a Rust indexer/API, Postgres projections, an operator frontend, and a TypeScript integration SDK.
+
+## Boundary
+
+A bound policy is not equivalent to verified authority over a world gate. Tenant operators retain control of their own policy and capability objects; the infrastructure evaluates and exposes evidence rather than owning political decisions.
+
+## Current status
+
+The repository documents a live Stillness/testnet operator console, Rust API/indexer, database projections, gas station, trust API, and native killmail endpoints. World-gate binding remains explicitly distinguished from a fully verified live-passage integration.
