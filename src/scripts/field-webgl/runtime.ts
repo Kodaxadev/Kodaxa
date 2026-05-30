@@ -1,37 +1,57 @@
-// WebGL hero runtime: a fullscreen "tile wall" shader + UnrealBloom. The
-// left→right reveal sweep is driven entirely by uTime inside the shader, so
-// this just owns the canvas, uniforms, bloom, resize, and lifecycle.
+// WebGL hero runtime: a fullscreen flip-dot board that reveals the Kodaxa wolf
+// mark with a left→right sweep. The sweep is driven by uTime inside the shader,
+// so this just owns the canvas, uniforms, resize, and lifecycle. No bloom — a
+// flip-dot board is matte; glow is what made earlier versions read as overlay.
 // Lazy-loaded by evidence-field.ts only when WebGL is available.
 import * as THREE from 'three';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { cosmosFrag, cosmosVert } from './cosmos.frag';
+import { dotboardFrag, dotboardVert } from './dotboard.frag';
 
 export type FieldHandle = { destroy: () => void };
 
+const LOGO_ASPECT = 248 / 340; // w/h of the mark texture
+
 export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean): FieldHandle {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'high-performance' });
-  renderer.setClearColor(0x06090d, 1);
-  renderer.toneMapping = THREE.NoToneMapping; // we tone-map in the shader
+  // ?reveal=full freezes the fully-revealed mark (design/debug aid).
+  const frozen = reduced || new URLSearchParams(location.search).get('reveal') === 'full';
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance', preserveDrawingBuffer: true });
+  renderer.setClearColor(0x06080b, 1);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   const scene = new THREE.Scene();
   const camera = new THREE.Camera();
 
-  // ?reveal=full freezes the fully-revealed target image (design/debug aid).
-  const frozen = reduced || new URLSearchParams(location.search).get('reveal') === 'full';
+  let texReady = false;
+  const logoTex = new THREE.TextureLoader().load('/assets/brand/kodaxa-mark.png', () => {
+    texReady = true;
+    if (frozen) renderer.render(scene, camera); // re-render the still once loaded
+  });
+  logoTex.colorSpace = THREE.SRGBColorSpace;
+  logoTex.minFilter = THREE.LinearFilter;
+  logoTex.magFilter = THREE.LinearFilter;
+
   const uniforms: Record<string, THREE.IUniform> = {
     uRes: { value: new THREE.Vector2(1, 1) },
     uTime: { value: 0 },
-    uTiles: { value: ambient ? 120 : 200 },
+    uTiles: { value: 200 },
     uReduced: { value: frozen ? 1 : 0 },
+    uLogo: { value: logoTex },
+    uLogoRect: { value: new THREE.Vector4(0.55, 0.13, 0.3, 0.74) },
+  };
+
+  // Place the mark center-right (clear of the headline), preserving aspect.
+  const placeLogo = (w: number, h: number) => {
+    const canvasAspect = w / Math.max(h, 1);
+    const hFrac = ambient ? 0.6 : 0.78;             // mark height as fraction of canvas
+    const wFrac = (hFrac * LOGO_ASPECT) / canvasAspect;
+    const cx = ambient ? 0.5 : 0.68;                // centre x
+    (uniforms.uLogoRect.value as THREE.Vector4).set(cx - wFrac / 2, 0.5 - hFrac / 2, wFrac, hFrac);
   };
 
   const material = new THREE.ShaderMaterial({
-    vertexShader: cosmosVert,
-    fragmentShader: cosmosFrag,
+    vertexShader: dotboardVert,
+    fragmentShader: dotboardFrag,
     uniforms,
     depthTest: false,
     depthWrite: false,
@@ -39,14 +59,6 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean): Fi
   const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
   quad.frustumCulled = false;
   scene.add(quad);
-
-  const composer = new EffectComposer(renderer);
-  composer.addPass(new RenderPass(scene, camera));
-  // Flip-dot board = matte discrete dots, NOT a glow. Keep bloom minimal and
-  // high-threshold so only the brightest star-dots get a faint halo; the dot
-  // field itself stays crisp instead of bleeding into a continuous overlay.
-  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.35, 0.6, 0.7);
-  composer.addPass(bloom);
 
   let raf = 0;
   let running = true;
@@ -57,27 +69,26 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean): Fi
     const dpr = Math.min(window.devicePixelRatio || 1, w > 1100 ? 1.5 : 2);
     renderer.setPixelRatio(dpr);
     renderer.setSize(w, h, false);
-    composer.setPixelRatio(dpr);
-    composer.setSize(w, h);
-    bloom.setSize(w * dpr, h * dpr);
     (uniforms.uRes.value as THREE.Vector2).set(w * dpr, h * dpr);
-    // Tile density = image "resolution"; smaller tiles → sharper reveal.
-    const px = ambient ? 8 : 5;
-    uniforms.uTiles.value = Math.min(ambient ? 220 : 380, Math.round(w / px));
+    placeLogo(w, h);
+    // Tile density = board "resolution"; smaller tiles → sharper wolf.
+    const px = ambient ? 7 : 5;
+    uniforms.uTiles.value = Math.min(ambient ? 240 : 360, Math.round(w / px));
   };
 
   const clock = new THREE.Clock();
   const loop = () => {
     if (!running) return;
     uniforms.uTime.value = clock.getElapsedTime();
-    composer.render();
+    renderer.render(scene, camera);
     raf = requestAnimationFrame(loop);
   };
 
   resize();
+  (window as any).__field = { uniforms, get texReady() { return texReady; }, logoTex }; // debug
   window.addEventListener('resize', resize, { passive: true });
   if (frozen) {
-    composer.render(); // single resolved frame, no animation loop
+    renderer.render(scene, camera); // single resolved frame, no loop
   } else {
     loop();
   }
@@ -89,7 +100,7 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean): Fi
       window.removeEventListener('resize', resize);
       material.dispose();
       quad.geometry.dispose();
-      composer.dispose();
+      logoTex.dispose();
       renderer.dispose();
     },
   };
