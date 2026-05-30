@@ -53,22 +53,35 @@ button {
   background: rgba(6, 9, 13, .38);
 }
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(.5rem, .85vw, .78rem);
+  opacity: .97;
+}
+.brand-mark {
   display: block;
-  width: clamp(9.5rem, 13.2vw, 12.8rem);
-  height: clamp(3rem, 4.35vw, 4.25rem);
-  opacity: .94;
+  width: auto;
+  height: clamp(2.3rem, 3.4vw, 3rem);
 }
-.brand img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: left center;
+.brand-word {
+  display: flex;
+  flex-direction: column;
+  gap: .22em;
+  line-height: 1;
 }
-.brand--compact {
-  width: 10.7rem;
-  height: 3.35rem;
+.brand-name {
+  font: 600 clamp(1rem, 1.5vw, 1.24rem)/1 var(--sans);
+  letter-spacing: .17em;
+  text-transform: uppercase;
+  color: var(--text);
 }
+.brand-sub {
+  font: 400 clamp(.45rem, .7vw, .55rem)/1 var(--sans);
+  letter-spacing: .355em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+.brand--compact .brand-mark { height: 2.6rem; }
 .site-header {
   height: clamp(5.4rem, 7vw, 6.7rem);
   padding: 0 var(--pad);
@@ -209,10 +222,7 @@ button {
   }
   .site-header nav,
   .header-index { display: none; }
-  .brand {
-    width: 11.5rem;
-    height: 3.8rem;
-  }
+  .brand-mark { height: 3.05rem; }
   .menu-button {
     display: grid;
     gap: .42rem;
