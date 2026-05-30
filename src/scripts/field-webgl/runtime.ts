@@ -42,9 +42,10 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean): Fi
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  // strength, radius, threshold — threshold ~0.5 so only true highlights bloom
-  // (nebula stays saturated instead of washing to milky gray).
-  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), ambient ? 0.55 : 0.9, 0.7, 0.5);
+  // Flip-dot board = matte discrete dots, NOT a glow. Keep bloom minimal and
+  // high-threshold so only the brightest star-dots get a faint halo; the dot
+  // field itself stays crisp instead of bleeding into a continuous overlay.
+  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.22, 0.5, 0.82);
   composer.addPass(bloom);
 
   let raf = 0;
