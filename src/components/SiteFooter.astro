@@ -1,12 +1,27 @@
 ---
 import Brand from './Brand.astro';
 ---
-<footer class="site-footer" id="contact">
+<section class="contact-band" id="contact" aria-label="Contact">
+  <div class="contact-lead" data-reveal>
+    <p class="section-label">Contact</p>
+    <h2>Start a conversation<span>.</span></h2>
+    <p class="contact-copy">For collaboration, infrastructure questions, or access to a system — reach out directly.</p>
+  </div>
+  <div class="contact-channels" data-reveal data-reveal-delay="1">
+    <a class="contact-email" href="mailto:Justin@kodaxa.dev">Justin@kodaxa.dev<span aria-hidden="true">→</span></a>
+    <ul>
+      <li><span>GitHub</span><a href="https://github.com/Kodaxadev" rel="noopener">github.com/Kodaxadev ↗</a></li>
+      <li><span>Systems</span><a href="/work">View the work →</a></li>
+    </ul>
+  </div>
+</section>
+<footer class="site-footer">
   <Brand compact />
   <p>Designing governance layers for messy systems:<br />AI workflows, game economies, and trusted coordination.</p>
   <nav aria-label="Footer navigation">
     <a href="/work">Work</a>
     <a href="/#philosophy">Philosophy</a>
     <a href="/work#archive">Archive</a>
+    <a href="mailto:Justin@kodaxa.dev">Contact</a>
   </nav>
 </footer>
