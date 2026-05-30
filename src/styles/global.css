@@ -149,8 +149,8 @@ button {
   transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
 }
 .action-button:hover {
-  border-color: rgba(196, 155, 112, .64);
-  background: rgba(160, 111, 65, .07);
+  border-color: rgba(147, 194, 210, .7);
+  background: rgba(86, 150, 176, .1);
   transform: translateY(-1px);
 }
 .action-button--quiet {
