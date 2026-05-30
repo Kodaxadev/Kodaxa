@@ -4,6 +4,7 @@ import '@fontsource-variable/inter/wght.css';
 import '@fontsource/ibm-plex-mono/400.css';
 import '../styles/tokens.css';
 import '../styles/global.css';
+import '../styles/field.css';
 
 interface Props {
   title?: string;
@@ -38,8 +39,16 @@ const socialImage = new URL(image, Astro.site ?? Astro.url.origin);
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>{title}</title>
+    <script is:inline>
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.classList.add('reveal-ready');
+      }
+    </script>
   </head>
   <body>
     <slot />
+    <script>
+      import '../scripts/reveal-scroll';
+    </script>
   </body>
 </html>

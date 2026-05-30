@@ -8,8 +8,8 @@ import { projectCards } from '../data/site';
     <a href="/work">View all work →</a>
   </div>
   <div class="project-grid">
-    {projectCards.map((project) => (
-      <article class="project-card">
+    {projectCards.map((project, index) => (
+      <article class="project-card" data-reveal data-reveal-delay={(index % 4) + 1}>
         <ProjectVisual image={project.image} label={project.mediaLabel} title={project.title} />
         <h3>{project.title}</h3>
         <p>{project.copy}</p>

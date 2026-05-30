@@ -3,8 +3,8 @@ import PrincipleIcon from './PrincipleIcon.astro';
 import { principles } from '../data/site';
 ---
 <section class="principles" id="about">
-  {principles.map((principle) => (
-    <article>
+  {principles.map((principle, index) => (
+    <article data-reveal data-reveal-delay={(index % 4) + 1}>
       <PrincipleIcon type={principle.icon} />
       <h2>{principle.title}</h2>
       <p>{principle.copy}</p>

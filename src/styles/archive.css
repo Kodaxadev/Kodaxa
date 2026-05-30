@@ -2,12 +2,18 @@
   padding: clamp(3.2rem, 6vw, 6.5rem) var(--pad) clamp(3.5rem, 7vw, 7rem);
 }
 .archive-hero {
+  position: relative;
+  overflow: hidden;
   display: grid;
   grid-template-columns: minmax(22rem, 1fr) minmax(17rem, .58fr);
   gap: clamp(3rem, 8vw, 10rem);
-  padding-bottom: clamp(3rem, 6vw, 5.2rem);
+  min-height: clamp(20rem, 30vw, 27rem);
+  align-content: center;
+  padding: clamp(1.6rem, 3.4vw, 3rem) 0 clamp(3rem, 6vw, 5.2rem);
   border-bottom: var(--hairline);
 }
+.archive-hero > div,
+.archive-hero > aside { position: relative; z-index: 1; }
 .archive-hero h1 {
   margin: clamp(1.15rem, 2vw, 1.7rem) 0 clamp(1.3rem, 2.4vw, 2rem);
   font: 400 clamp(4.2rem, 8vw, 8.5rem)/.9 var(--serif);
@@ -24,7 +30,7 @@
 .archive-note {
   align-self: end;
   padding: 1.35rem 0 0 1.5rem;
-  border-top: 1px solid rgba(196,155,112,.38);
+  border-top: 1px solid rgba(147, 194, 210, .42);
   border-left: 0;
 }
 .archive-note h2 {
@@ -70,9 +76,10 @@
   transition: border-color 200ms ease, transform 200ms ease, background 200ms ease;
 }
 .archive-card:hover {
-  border-color: rgba(196,155,112,.3);
+  border-color: rgba(147, 194, 210, .42);
   background: rgba(10,15,19,.5);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 40px -20px rgba(86, 150, 176, .55);
 }
 .archive-card__media {
   position: relative;
@@ -87,13 +94,14 @@
   height: 100%;
   object-fit: cover;
   object-position: top center;
-  opacity: .87;
-  filter: saturate(.68) contrast(1.025) brightness(.94);
-  transition: transform 300ms ease, opacity 300ms ease;
+  opacity: .95;
+  filter: saturate(.95) contrast(1.05) brightness(1);
+  transition: transform 350ms ease, opacity 350ms ease, filter 350ms ease;
 }
 .archive-card:hover .archive-card__media img {
-  transform: scale(1.02);
-  opacity: .96;
+  transform: scale(1.035);
+  opacity: 1;
+  filter: saturate(1.12) contrast(1.07) brightness(1.05);
 }
 .archive-card__media::after {
   position: absolute;
@@ -107,9 +115,9 @@
   right: .68rem;
   bottom: .68rem;
   padding: .36rem .48rem;
-  border: 1px solid rgba(196,155,112,.26);
+  border: 1px solid rgba(147, 194, 210, .3);
   background: rgba(6,9,13,.88);
-  color: var(--amber-soft);
+  color: var(--blue-soft);
   font: .49rem var(--mono);
   letter-spacing: .18em;
   text-transform: uppercase;

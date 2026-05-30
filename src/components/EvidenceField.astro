@@ -1,8 +1,16 @@
-<div class="evidence-field" aria-hidden="true">
-  <canvas id="evidence-canvas"></canvas>
-  <span class="signal signal--verified">Evidence verified</span>
-  <span class="signal signal--context">Context resolved</span>
-  <span class="signal signal--aligned">Evidence aligned</span>
+---
+interface Props { ambient?: boolean }
+const { ambient = false } = Astro.props;
+---
+<div class:list={['evidence-field', ambient && 'evidence-field--ambient']} aria-hidden="true">
+  <canvas id="evidence-canvas" data-variant={ambient ? 'ambient' : 'hero'}></canvas>
+  {!ambient && (
+    <>
+      <span class="signal signal--verified">Evidence verified</span>
+      <span class="signal signal--context">Context resolved</span>
+      <span class="signal signal--aligned">Evidence aligned</span>
+    </>
+  )}
 </div>
 <script>
   import '../scripts/evidence-field';

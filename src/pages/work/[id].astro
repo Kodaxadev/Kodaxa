@@ -5,6 +5,7 @@ import SiteHeader from '../../components/SiteHeader.astro';
 import SiteFooter from '../../components/SiteFooter.astro';
 import ArchitectureFlow from '../../components/ArchitectureFlow.astro';
 import ProjectMedia from '../../components/ProjectMedia.astro';
+import EvidenceField from '../../components/EvidenceField.astro';
 import '../../styles/project.css';
 
 export async function getStaticPaths() {
@@ -24,6 +25,7 @@ const data = project.data;
     <SiteHeader />
     <article class="case-study">
       <header class="case-hero">
+        <EvidenceField ambient />
         <div>
           <p class="section-label">{data.eyebrow}</p>
           <h1>{data.title}<span>.</span></h1>
@@ -41,7 +43,7 @@ const data = project.data;
       </header>
       {data.media && <ProjectMedia media={data.media} />}
       {project.id === 'frontierwarden' && <ArchitectureFlow />}
-      <section class="case-content">
+      <section class="case-content" data-reveal>
         <Content />
       </section>
       <footer class="case-end">

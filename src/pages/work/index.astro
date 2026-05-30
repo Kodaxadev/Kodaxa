@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../../components/SiteHeader.astro';
 import SiteFooter from '../../components/SiteFooter.astro';
+import EvidenceField from '../../components/EvidenceField.astro';
 import '../../styles/archive.css';
 
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
@@ -23,6 +24,7 @@ const grouped = domains.map((domain, index) => ({
     <SiteHeader />
     <article class="archive-page" id="archive">
       <header class="archive-hero">
+        <EvidenceField ambient />
         <div>
           <p class="section-label">Work archive</p>
           <h1>Built systems<span>.</span></h1>
@@ -35,13 +37,13 @@ const grouped = domains.map((domain, index) => ({
       </header>
       {grouped.map((group) => (
         <section class="archive-domain" id={group.slug} aria-label={group.title}>
-          <header class="archive-domain__head">
+          <header class="archive-domain__head" data-reveal>
             <span>{group.index}</span>
             <h2>{group.title}</h2>
           </header>
           <div class="archive-cards">
-            {group.projects.map((project) => (
-              <article class="archive-card">
+            {group.projects.map((project, index) => (
+              <article class="archive-card" data-reveal data-reveal-delay={(index % 3) + 1}>
                 <div class="archive-card__media">
                   {project.data.media ? (
                     <>

@@ -33,9 +33,10 @@
   transition: border-color 200ms ease, background 200ms ease, transform 200ms ease;
 }
 .project-card:hover {
-  border-color: rgba(147, 194, 210, .32);
+  border-color: rgba(147, 194, 210, .4);
   background: rgba(11, 16, 20, .6);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 40px -20px rgba(86, 150, 176, .55);
 }
 .project-card h3 {
   margin: 1rem .55rem .5rem;
@@ -72,14 +73,14 @@
   height: 100%;
   object-fit: cover;
   object-position: top center;
-  opacity: .84;
-  filter: saturate(.78) contrast(1.02) brightness(.92);
-  transition: transform 300ms ease, opacity 300ms ease, filter 300ms ease;
+  opacity: .92;
+  filter: saturate(.96) contrast(1.04) brightness(1);
+  transition: transform 350ms ease, opacity 350ms ease, filter 350ms ease;
 }
 .project-card:hover .project-visual img {
-  transform: scale(1.03);
-  opacity: .95;
-  filter: saturate(.9) contrast(1.03) brightness(.97);
+  transform: scale(1.04);
+  opacity: 1;
+  filter: saturate(1.12) contrast(1.06) brightness(1.05);
 }
 .project-visual::after {
   position: absolute;
@@ -126,8 +127,8 @@
   min-height: inherit;
   object-fit: cover;
   object-position: center;
-  opacity: .8;
-  filter: saturate(.78) contrast(1.02);
+  opacity: .9;
+  filter: saturate(.95) contrast(1.03);
 }
 .concept-visual::after {
   position: absolute;

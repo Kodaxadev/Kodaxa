@@ -8,7 +8,7 @@ interface Media {
 interface Props { media: Media }
 const { media } = Astro.props;
 ---
-<figure class="case-media">
+<figure class="case-media" data-reveal>
   <div class="case-media__frame">
     <img src={media.src} alt={media.alt} loading="eager" />
   </div>

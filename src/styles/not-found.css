@@ -6,25 +6,16 @@
   padding: var(--pad);
   overflow: hidden;
 }
-.not-found::before {
-  position: absolute;
-  inset: 8% 0 0;
-  content: '';
-  background:
-    radial-gradient(circle at 68% 48%, rgba(86, 143, 157, .09), transparent 27%),
-    radial-gradient(circle at 40% 63%, rgba(166, 114, 66, .04), transparent 22%),
-    repeating-linear-gradient(0deg, transparent 0 58px, rgba(132, 143, 142, .055) 59px),
-    repeating-linear-gradient(90deg, transparent 0 82px, rgba(132, 143, 142, .04) 83px);
-  mask-image: linear-gradient(transparent, #000 25%, #000 72%, transparent);
-}
 .not-found__content {
   position: relative;
   z-index: 1;
   width: min(52rem, 100%);
   padding: clamp(2.3rem, 5vw, 4.6rem);
   border: var(--hairline);
-  border-top-color: rgba(196,155,112,.35);
-  background: rgba(6, 9, 13, .72);
+  border-top-color: rgba(147, 194, 210, .45);
+  background: rgba(6, 9, 13, .58);
+  backdrop-filter: blur(2px);
+  box-shadow: 0 30px 80px -40px rgba(86, 150, 176, .4);
 }
 .not-found__code {
   color: var(--amber-soft);

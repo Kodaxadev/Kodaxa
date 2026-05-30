@@ -2,12 +2,18 @@
   padding: clamp(2.1rem, 4vw, 4.4rem) var(--pad) 0;
 }
 .case-hero {
+  position: relative;
+  overflow: hidden;
   display: grid;
   grid-template-columns: minmax(22rem, 1fr) minmax(18rem, .62fr);
   gap: clamp(2.5rem, 7vw, 9rem);
+  min-height: clamp(19rem, 28vw, 25rem);
+  align-content: center;
   padding: clamp(1.5rem, 3vw, 2.7rem) 0 clamp(2.8rem, 5vw, 4.5rem);
   border-bottom: var(--hairline);
 }
+.case-hero > div,
+.case-hero > aside { position: relative; z-index: 1; }
 .case-hero h1 {
   margin: clamp(1.2rem, 2vw, 1.8rem) 0 clamp(1.4rem, 2.3vw, 2rem);
   font: 400 clamp(4.2rem, 7.2vw, 8.3rem)/.9 var(--serif);
@@ -32,7 +38,7 @@
 .case-meta {
   align-self: end;
   padding: 0;
-  border-top: 1px solid rgba(196,155,112,.4);
+  border-top: 1px solid rgba(147, 194, 210, .45);
 }
 .case-meta div {
   display: grid;
@@ -69,8 +75,8 @@
   max-height: min(56vw, 50rem);
   object-fit: cover;
   object-position: top center;
-  opacity: .93;
-  filter: saturate(.72) contrast(1.025);
+  opacity: .97;
+  filter: saturate(.98) contrast(1.05);
 }
 .case-media figcaption {
   display: flex;
@@ -110,6 +116,14 @@
   min-height: 8.1rem;
   padding: 1.1rem;
   border: var(--hairline);
+  border-left: 2px solid rgba(102, 169, 196, .45);
+  transition: border-color 220ms ease, background 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+.architecture-flow article:hover {
+  border-left-color: var(--blue-soft);
+  background: rgba(86, 150, 176, .07);
+  box-shadow: 0 14px 36px -22px rgba(86, 150, 176, .6);
+  transform: translateY(-2px);
 }
 .architecture-flow article span {
   color: var(--amber-soft);
@@ -130,6 +144,15 @@
 .architecture-flow > i {
   color: var(--blue-soft);
   font-style: normal;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .architecture-flow > i { animation: flow-pulse 2.6s ease-in-out infinite; }
+  .architecture-flow > i:nth-of-type(2) { animation-delay: .35s; }
+  .architecture-flow > i:nth-of-type(3) { animation-delay: .7s; }
+}
+@keyframes flow-pulse {
+  0%, 100% { opacity: .32; text-shadow: none; }
+  50% { opacity: 1; text-shadow: 0 0 10px rgba(102, 169, 196, .85); }
 }
 .case-content {
   display: grid;

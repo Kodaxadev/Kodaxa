@@ -20,6 +20,7 @@ const TAU = Math.PI * 2;
 if (canvas) {
   const ctx = canvas.getContext('2d');
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
+  const ambient = canvas.dataset.variant === 'ambient';
   let width = 0;
   let height = 0;
   let cols = 0;
@@ -86,8 +87,8 @@ if (canvas) {
   const focal = () => idx(Math.round(cols * 0.79), Math.round(rows * 0.42));
 
   const projectAll = () => {
-    const fieldLeft = width * 0.27;
-    const fieldRight = width * 1.04;
+    const fieldLeft = ambient ? width * -0.02 : width * 0.27;
+    const fieldRight = ambient ? width * 1.02 : width * 1.04;
     const fieldW = fieldRight - fieldLeft;
     const centre = fieldLeft + fieldW * 0.5;
     const frontY = height * 0.98;
@@ -120,7 +121,7 @@ if (canvas) {
   };
 
   const spawnPulse = () => {
-    if (pulses.length >= 5) return;
+    if (pulses.length >= (ambient ? 3 : 5)) return;
     let n = focal();
     if (Math.random() > 0.42) {
       // Bias toward an elevated node so waves break over the ridges.
@@ -162,7 +163,7 @@ if (canvas) {
     if (!reducedMotion) {
       if (frame >= nextSpawn) {
         spawnPulse();
-        nextSpawn = frame + 34 + Math.floor(Math.random() * 56);
+        nextSpawn = frame + (ambient ? 64 : 34) + Math.floor(Math.random() * (ambient ? 80 : 56));
       }
       for (let p = pulses.length - 1; p >= 0; p -= 1) {
         pulses[p].r += pulses[p].speed;
