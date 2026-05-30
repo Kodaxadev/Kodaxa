@@ -5,11 +5,11 @@ const { ambient = false } = Astro.props;
 <div class:list={['evidence-field', ambient && 'evidence-field--ambient']} aria-hidden="true">
   <canvas id="evidence-canvas" data-variant={ambient ? 'ambient' : 'hero'}></canvas>
   {!ambient && (
-    <div class="flip-terminal" aria-hidden="true">
-      <span class="flip-terminal__line flip-terminal__line--one">Evidence verified</span>
-      <span class="flip-terminal__line flip-terminal__line--two">Context resolved</span>
-      <span class="flip-terminal__line flip-terminal__line--three">Evidence aligned</span>
-    </div>
+    <>
+      <span class="signal signal--verified">Evidence verified</span>
+      <span class="signal signal--context">Context resolved</span>
+      <span class="signal signal--aligned">Evidence aligned</span>
+    </>
   )}
 </div>
 <script>
