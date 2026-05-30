@@ -8,12 +8,13 @@
   --text: #f0eee9;
   --text-soft: #c6c2ba;
   --text-muted: #868984;
-  --blue: #5a9bb0;
-  --blue-soft: #8ab9c5;
-  --blue-glow: rgba(78, 132, 150, 0.2);
-  --amber: #a97847;
-  --amber-soft: #c49b70;
-  --amber-glow: rgba(166, 114, 66, 0.18);
+  --blue: #66a9c4;
+  --blue-soft: #93c2d2;
+  --blue-glow: rgba(86, 150, 176, 0.22);
+  /* Accent unified to cool blue to match the design comp. */
+  --amber: #66a9c4;
+  --amber-soft: #93c2d2;
+  --amber-glow: rgba(86, 150, 176, 0.18);
   --success: #6e9680;
   --danger: #a2685c;
   --serif: 'Instrument Serif', Georgia, serif;

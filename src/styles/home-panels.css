@@ -1,12 +1,12 @@
 .work-rail {
   border-bottom: var(--hairline);
-  padding: clamp(2.5rem, 4.5vw, 4.5rem) var(--pad) clamp(2.7rem, 4.5vw, 4.6rem);
+  padding: clamp(2.4rem, 4.2vw, 4.3rem) var(--pad) clamp(2.6rem, 4.2vw, 4.4rem);
 }
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: clamp(1.5rem, 2.5vw, 2.4rem);
+  margin-bottom: clamp(1.4rem, 2.4vw, 2.3rem);
 }
 .section-header a {
   color: var(--text-muted);
@@ -15,60 +15,56 @@
   text-transform: uppercase;
   transition: color 180ms ease;
 }
-.section-header a:hover { color: var(--amber-soft); }
+.section-header a:hover { color: var(--blue-soft); }
+
+/* --------------------------------------------------------- Systems rail */
 .project-grid {
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: clamp(.55rem, .9vw, .8rem);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(.5rem, .8vw, .75rem);
 }
 .project-card {
-  grid-column: span 4;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  padding: .55rem .55rem 1.25rem;
+  padding: .5rem .5rem 1.2rem;
   border: var(--hairline);
   background: rgba(8, 12, 16, .34);
   transition: border-color 200ms ease, background 200ms ease, transform 200ms ease;
 }
-.project-card:first-child { grid-column: span 7; }
-.project-card:nth-child(2) { grid-column: span 5; }
 .project-card:hover {
-  border-color: rgba(196,155,112,.3);
+  border-color: rgba(147, 194, 210, .32);
   background: rgba(11, 16, 20, .6);
   transform: translateY(-2px);
 }
 .project-card h3 {
-  margin: 1.15rem .65rem .55rem;
-  font: 400 clamp(1.5rem, 1.9vw, 1.85rem)/1 var(--serif);
-  letter-spacing: -.02em;
+  margin: 1rem .55rem .5rem;
+  font: 400 clamp(1.32rem, 1.5vw, 1.6rem)/1.05 var(--serif);
+  letter-spacing: -.01em;
 }
 .project-card p {
-  min-height: 3.25rem;
-  max-width: 34rem;
-  margin: 0 .65rem 1.15rem;
+  flex: 1;
+  margin: 0 .55rem 1.05rem;
   color: var(--text-muted);
-  font-size: .73rem;
-  line-height: 1.75;
+  font-size: .71rem;
+  line-height: 1.72;
 }
 .project-card > a {
-  margin: 0 .65rem;
+  margin: 0 .55rem;
   color: var(--text-soft);
-  font: .59rem/1 var(--mono);
-  letter-spacing: .14em;
+  font: .57rem/1 var(--mono);
+  letter-spacing: .13em;
   text-transform: uppercase;
   transition: color 180ms ease;
 }
-.project-card > a:hover { color: var(--amber-soft); }
+.project-card > a:hover { color: var(--blue-soft); }
 .project-visual {
   position: relative;
-  height: clamp(11.5rem, 14.2vw, 15.4rem);
+  height: clamp(8.5rem, 11vw, 11.4rem);
   margin: 0;
   overflow: hidden;
   border-bottom: var(--hairline);
   background: var(--bg-soft);
-}
-.project-card:first-child .project-visual,
-.project-card:nth-child(2) .project-visual {
-  height: clamp(14.4rem, 19vw, 20rem);
 }
 .project-visual img {
   display: block;
@@ -77,35 +73,37 @@
   object-fit: cover;
   object-position: top center;
   opacity: .84;
-  filter: saturate(.65) contrast(1.025) brightness(.92);
+  filter: saturate(.78) contrast(1.02) brightness(.92);
   transition: transform 300ms ease, opacity 300ms ease, filter 300ms ease;
 }
 .project-card:hover .project-visual img {
-  transform: scale(1.02);
-  opacity: .94;
-  filter: saturate(.74) contrast(1.03) brightness(.96);
+  transform: scale(1.03);
+  opacity: .95;
+  filter: saturate(.9) contrast(1.03) brightness(.97);
 }
 .project-visual::after {
   position: absolute;
   inset: 0;
   pointer-events: none;
   content: '';
-  background: linear-gradient(180deg, transparent 50%, rgba(6, 9, 13, .8));
+  background: linear-gradient(180deg, transparent 52%, rgba(6, 9, 13, .8));
 }
 .project-visual figcaption,
 .concept-visual figcaption {
   position: absolute;
   z-index: 1;
-  right: .65rem;
-  bottom: .65rem;
-  padding: .34rem .45rem;
-  border: 1px solid rgba(196,155,112,.24);
-  background: rgba(6,9,13,.84);
-  color: var(--amber-soft);
-  font: .49rem/1 var(--mono);
-  letter-spacing: .18em;
+  right: .55rem;
+  bottom: .55rem;
+  padding: .32rem .44rem;
+  border: 1px solid rgba(147, 194, 210, .28);
+  background: rgba(6, 9, 13, .84);
+  color: var(--blue-soft);
+  font: .47rem/1 var(--mono);
+  letter-spacing: .16em;
   text-transform: uppercase;
 }
+
+/* ----------------------------------------------- Concepts & experiments */
 .concept-strip {
   display: grid;
   grid-template-columns: 1.2fr .82fr 1fr;
@@ -113,8 +111,7 @@
   border-bottom: var(--hairline);
 }
 .concept-visual,
-.concept-copy,
-.concept-strip blockquote { border-right: var(--hairline); }
+.concept-copy { border-right: var(--hairline); }
 .concept-visual {
   position: relative;
   min-height: inherit;
@@ -129,14 +126,14 @@
   min-height: inherit;
   object-fit: cover;
   object-position: center;
-  opacity: .78;
-  filter: saturate(.62) contrast(1.02);
+  opacity: .8;
+  filter: saturate(.78) contrast(1.02);
 }
 .concept-visual::after {
   position: absolute;
   inset: 0;
   content: '';
-  background: linear-gradient(90deg, transparent 26%, rgba(6,9,13,.22));
+  background: linear-gradient(90deg, transparent 26%, rgba(6, 9, 13, .22));
 }
 .concept-copy {
   display: flex;
@@ -159,18 +156,20 @@
   font: .59rem var(--mono);
   letter-spacing: .14em;
   text-transform: uppercase;
+  transition: color 180ms ease;
 }
-.concept-copy a:hover { color: var(--amber-soft); }
+.concept-copy a:hover { color: var(--blue-soft); }
 .concept-strip blockquote {
   display: grid;
   align-content: center;
   margin: clamp(2rem, 4vw, 3.5rem) var(--pad);
   padding: .3rem clamp(1.35rem, 2.2vw, 2.2rem);
-  border-right: 0;
-  border-left: 1px solid rgba(196,155,112,.48);
+  border-left: 1px solid rgba(147, 194, 210, .5);
   color: var(--text);
   font: 400 clamp(1.55rem, 2.1vw, 2.05rem)/1.35 var(--serif);
 }
+
+/* ------------------------------------------------------------ Principles */
 .principles {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -178,17 +177,24 @@
   gap: clamp(1.1rem, 2.8vw, 2.7rem);
 }
 .principles article {
+  display: flex;
+  flex-direction: column;
   min-height: 9rem;
-  padding: 1.35rem 0 0;
-  border-top: 1px solid rgba(196,155,112,.25);
+  padding: 1.4rem 0 0;
+  border-top: 1px solid rgba(147, 194, 210, .28);
 }
-.principle-mark {
-  color: var(--amber-soft);
-  font: .57rem var(--mono);
-  letter-spacing: .15em;
+.principle-icon {
+  width: 1.7rem;
+  height: 1.7rem;
+  stroke: var(--blue-soft);
+  fill: none;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: .92;
 }
 .principles h2 {
-  margin: 1rem 0 .65rem;
+  margin: 1rem 0 .6rem;
   color: var(--text-soft);
   font: .62rem var(--mono);
   letter-spacing: .15em;
@@ -200,25 +206,24 @@
   font-size: .73rem;
   line-height: 1.78;
 }
+
+/* ----------------------------------------------------------- Responsive */
 @media (max-width: 1080px) {
-  .project-card,
-  .project-card:first-child,
-  .project-card:nth-child(2) { grid-column: span 6; }
-  .project-card:last-child { grid-column: span 12; }
+  .project-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .concept-strip { grid-template-columns: 1fr 1fr; }
-  .concept-strip blockquote { grid-column: 1 / -1; min-height: 12rem; }
+  .concept-strip blockquote { grid-column: 1 / -1; min-height: 12rem; border-top: var(--hairline); border-left: 0; }
+  .principles { grid-template-columns: repeat(2, 1fr); }
 }
-@media (max-width: 720px) {
-  .project-grid { display: block; }
-  .project-card { margin-bottom: .8rem; }
-  .project-visual,
-  .project-card:first-child .project-visual,
-  .project-card:nth-child(2) .project-visual { height: 12.5rem; }
-  .concept-strip,
-  .principles { display: block; }
+@media (max-width: 680px) {
+  .project-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .project-grid { grid-template-columns: 1fr; }
+  .concept-strip { display: block; }
   .concept-visual,
   .concept-visual img { min-height: 12rem; height: 12rem; }
   .concept-copy { min-height: 14rem; }
-  .concept-strip blockquote { margin: 0; min-height: 12rem; padding: 2.3rem var(--pad); border-top: var(--hairline); border-left: 0; }
+  .concept-strip blockquote { margin: 0; min-height: 12rem; padding: 2.3rem var(--pad); border-top: var(--hairline); }
+  .principles { display: block; }
   .principles article { margin-bottom: 1.8rem; }
 }

@@ -3,7 +3,7 @@ export const domains = [
     number: '01',
     slug: 'programmable-worlds',
     title: 'Programmable Worlds',
-    description: 'Infrastructure for trust, intelligence, and coordination in persistent worlds.',
+    description: 'Infrastructure for economic, simulative, and decisional systems on permissionless rails.',
     projects: ['FrontierWarden', 'Signal Vault', 'EF-Atlas', 'Agency Terminal'],
     icon: 'nodes',
   },
@@ -19,7 +19,7 @@ export const domains = [
     number: '03',
     slug: 'clarity-tools',
     title: 'Clarity Tools',
-    description: 'Human-first instruments that make hidden steps and data change understandable.',
+    description: 'Human-first instruments that make signals and claims understandable.',
     projects: ['STEP', 'RowDiFF'],
     icon: 'triangle',
   },
@@ -29,18 +29,22 @@ export const principles = [
   {
     title: 'Verifiable by design',
     copy: 'Trust signals and decisions remain traceable to evidence and declared policy.',
+    icon: 'shield',
   },
   {
     title: 'Open and interoperable',
     copy: 'APIs, SDKs, export paths, and standards wherever the system permits.',
+    icon: 'cube',
   },
   {
     title: 'Privacy respecting',
     copy: 'Local-first boundaries and minimum-necessary data handling by design.',
+    icon: 'lock',
   },
   {
     title: 'Adversary aware',
     copy: 'Systems built for contested information, drift, and manipulation risk.',
+    icon: 'radar',
   },
 ] as const;
 

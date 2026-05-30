@@ -1,10 +1,11 @@
 ---
+import PrincipleIcon from './PrincipleIcon.astro';
 import { principles } from '../data/site';
 ---
 <section class="principles" id="about">
-  {principles.map((principle, index) => (
+  {principles.map((principle) => (
     <article>
-      <span class="principle-mark">{String(index + 1).padStart(2, '0')}</span>
+      <PrincipleIcon type={principle.icon} />
       <h2>{principle.title}</h2>
       <p>{principle.copy}</p>
     </article>
