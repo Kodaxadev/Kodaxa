@@ -39,42 +39,55 @@ float fbm(vec2 p){
 float fbmWarp(vec2 p){ vec2 w = vec2(fbm(p), fbm(p + 5.2)); return fbm(p + w * 1.9); }
 
 // ---------- COSMOS target image: the colour each dot needs to show ----------
+// A full-frame violet/blue/magenta nebula with a hot glowing core, billowing
+// clouds, dark voids, and cyan accents — wide gamut for colour depth.
 vec3 cosmosTarget(vec2 uv){
   vec2 p = vec2(uv.x * aspect, uv.y);
 
-  // Cliff horizon dividing warm dust (below) from blue sky (above).
-  float ridge = 0.50 + 0.12*fbm(vec2(uv.x*2.4, 1.7)) + 0.05*fbm(vec2(uv.x*6.5, 4.0)) - 0.06;
-  float sky = smoothstep(ridge - 0.02, ridge + 0.06, uv.y);
+  // Glowing core biased to the right (clear of the headline copy).
+  vec2 core = vec2(0.72 * aspect, 0.6);
+  float coreGlow = exp(-length(p - core) * 2.3);
 
-  // Blue sky: teal near the crest deepening to navy up top.
-  vec3 skyCol = mix(vec3(0.12,0.42,0.74), vec3(0.02,0.05,0.16), smoothstep(ridge, 1.05, uv.y));
-  skyCol += vec3(0.05,0.14,0.28) * smoothstep(0.55,0.95, fbm(p*3.2 + 9.0));
+  // Billowing, domain-warped density.
+  float w  = fbmWarp(p * 1.7 + 2.0);
+  float d  = fbmWarp(p * 3.1 + w * 1.6 + 7.0);
+  float fn = fbm(p * 8.0 + d * 2.0 + 21.0);          // fine filaments
+  float density = clamp(w * 0.6 + d * 0.5 + fn * 0.2, 0.0, 1.0);
+  density = mix(density, 1.0, coreGlow * 0.65);       // core blooms outward
 
-  // Warm dust: turbulent billows, dark crevices → amber → gold, magenta accents.
-  float t1 = fbmWarp(p*2.4 + 3.0);
-  float t2 = fbmWarp(p*5.0 + t1*2.0 + 11.0);
-  float t3 = fbm(p*11.0 + t2*1.5 + 21.0);
-  float dust = clamp(t1*0.7 + t2*0.45 + t3*0.18, 0.0, 1.0);
-  vec3 dustCol = mix(vec3(0.05,0.02,0.03), vec3(0.30,0.10,0.05), smoothstep(0.1,0.45,dust));
-  dustCol = mix(dustCol, vec3(0.72,0.32,0.11), smoothstep(0.4,0.72,dust));
-  dustCol = mix(dustCol, vec3(0.98,0.70,0.34), pow(smoothstep(0.66,1.0,dust),1.8));
-  dustCol += vec3(0.42,0.10,0.22) * smoothstep(0.45,0.8,t3) * (1.0-dust*0.5) * 0.6;
-  float shade = fbm(p*5.0 + 11.3 + vec2(0.0,0.12)) - t2;
-  dustCol *= 1.0 + clamp(shade,-0.4,0.4)*0.7;
-  dustCol += vec3(1.0,0.62,0.28) * smoothstep(0.1,0.0,abs(uv.y-ridge)) * 0.85;
-  dustCol *= mix(0.4, 1.15, smoothstep(0.0, ridge, uv.y));
+  // Large-scale hue field → some regions lean blue, others magenta (breadth).
+  float hue = fbm(p * 1.1 + 30.0);
 
-  return mix(dustCol, skyCol, sky);
+  // Wide colour ramp.
+  vec3 voidc  = vec3(0.030, 0.022, 0.090);  // near-black indigo
+  vec3 deep   = vec3(0.110, 0.085, 0.330);  // deep indigo
+  vec3 blue   = vec3(0.170, 0.255, 0.760);  // royal blue
+  vec3 violet = vec3(0.430, 0.230, 0.720);  // violet
+  vec3 mag    = vec3(0.760, 0.340, 0.860);  // magenta
+  vec3 pink   = vec3(0.950, 0.600, 0.880);  // pink lavender
+  vec3 hot    = vec3(1.000, 0.930, 0.820);  // warm white core
+
+  vec3 col = mix(voidc, deep, smoothstep(0.04, 0.30, density));
+  vec3 mid = mix(blue, violet, hue);
+  mid = mix(mid, mag, smoothstep(0.55, 0.9, hue));
+  col = mix(col, mid, smoothstep(0.24, 0.6, density));
+  col = mix(col, pink, smoothstep(0.62, 0.88, density));
+  col = mix(col, hot, smoothstep(0.86, 1.0, density) * (0.45 + coreGlow));
+
+  // Cyan accents in the blue-leaning filaments.
+  col += vec3(0.05, 0.42, 0.55) * smoothstep(0.45, 0.8, fn) * (1.0 - hue) * 0.32;
+  // Magenta lightning filaments.
+  col += vec3(0.55, 0.12, 0.42) * smoothstep(0.62, 0.78, fn) * hue * 0.4;
+
+  return col;
 }
 
-// Per-dot stars: an individual dot can simply BE a star (no multi-tile spikes,
-// which would read as a continuous overlay). Density rises toward the sky.
+// Per-dot stars: an individual dot can simply BE a star. Denser in the voids.
 vec3 starDot(vec2 uv, vec2 tileId){
   vec3 h = hash23(tileId + 3.1);
-  float thresh = mix(0.988, 0.93, smoothstep(0.25, 1.0, uv.y));
   float tw = 0.6 + 0.4*sin(uTime*(1.0 + h.y*3.0) + h.z*6.28);
-  float star = step(thresh, h.x) * pow(h.y, 1.6) * (0.7 + tw);
-  return mix(vec3(0.9,0.95,1.0), vec3(0.78,0.84,1.0), h.z) * star;
+  float star = step(0.93, h.x) * pow(h.y, 1.7) * (0.7 + tw);
+  return mix(vec3(0.92,0.95,1.0), vec3(0.80,0.86,1.0), h.z) * star;
 }
 
 void main(){
@@ -87,9 +100,11 @@ void main(){
   vec2 tileUv = fract(cell) - 0.5;          // -0.5..0.5 within the dot cell
   vec2 tileCenter = (tileId + 0.5) / grid;
 
-  // --- the dot's fixed colour in the target image, QUANTISED (pixel-art) ---
+  // --- the dot's fixed colour in the target image ---
+  // Light posterise (16 levels/channel) keeps a pixel-art step between dots
+  // while preserving the colour DEPTH/BREADTH the nebula needs.
   vec3 neb = cosmosTarget(tileCenter);
-  neb = floor(neb * 5.0 + 0.5) / 5.0;       // posterise nebula → discrete steps
+  neb = floor(neb * 16.0 + 0.5) / 16.0;
   vec3 target = neb + starDot(tileCenter, tileId) * 1.6;
 
   // --- left→right flip sweep ---

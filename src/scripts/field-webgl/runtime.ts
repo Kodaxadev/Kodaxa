@@ -45,7 +45,7 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean): Fi
   // Flip-dot board = matte discrete dots, NOT a glow. Keep bloom minimal and
   // high-threshold so only the brightest star-dots get a faint halo; the dot
   // field itself stays crisp instead of bleeding into a continuous overlay.
-  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.22, 0.5, 0.82);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.35, 0.6, 0.7);
   composer.addPass(bloom);
 
   let raf = 0;
