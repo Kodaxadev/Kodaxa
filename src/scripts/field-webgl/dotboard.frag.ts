@@ -1,9 +1,13 @@
 // Fullscreen "flip-dot board" shader — Kodaxa wolf reveal.
 //
-// The hero is a wall of dark mechanical dots. A slow signal sweep resolves the
-// wolf, then the mark holds as a living display before organically decaying to a
-// ghost state. Only the wolf tiles become bright; empty board space remains a
-// quiet instrument surface for the terminal overlay.
+// The hero is a wall of dark dots. A single slow wavefront sweeps left→right;
+// as it reaches each column the wolf-mark dots FLIP (disc rotates edge-on,
+// snaps to colour), hold, then dim back to dark behind the front — tuned so
+// the left edge goes dark just as the right edge finishes lighting. Only tiles
+// inside the wolf ever light; everything else stays a faint dark board.
+//
+// The target image is sampled from the wolf-mark texture (uLogo) placed in the
+// uLogoRect region of UV space. No starfield, no nebula — just the board.
 export const dotboardFrag = /* glsl */ `
 precision highp float;
 varying vec2 vUv;
@@ -23,14 +27,11 @@ float hash21(vec2 p){
   return fract(p.x * p.y);
 }
 
+// Sample the wolf mark at a uv point → rgb + coverage(alpha).
 vec4 wolfAt(vec2 uv){
   vec2 luv = (uv - uLogoRect.xy) / uLogoRect.zw;
   if(luv.x < 0.0 || luv.x > 1.0 || luv.y < 0.0 || luv.y > 1.0) return vec4(0.0);
   return texture2D(uLogo, luv);
-}
-
-float windowPulse(float x, float a, float b, float feather){
-  return smoothstep(a, a + feather, x) * (1.0 - smoothstep(b - feather, b, x));
 }
 
 void main(){
@@ -42,81 +43,52 @@ void main(){
   vec2 tileId = floor(cell);
   vec2 tileUv = fract(cell) - 0.5;
   vec2 tileCenter = (tileId + 0.5) / grid;
-  float grain = hash21(tileId);
-  float grain2 = hash21(tileId + vec2(19.7, 41.2));
 
+  // --- this dot's target: the wolf-mark colour, lifted so dark facets still
+  // read clearly against black while keeping the facet shading (3D form) ---
   vec4 wolf = wolfAt(tileCenter);
-  float raw = wolf.a;
-  float coverage = smoothstep(0.26, 0.56, raw);
-
-  vec2 texel = vec2(1.5 / max(uLogoRect.z * grid.x, 1.0), 1.5 / max(uLogoRect.w * grid.y, 1.0));
-  float n1 = wolfAt(tileCenter + vec2(texel.x, 0.0)).a;
-  float n2 = wolfAt(tileCenter - vec2(texel.x, 0.0)).a;
-  float n3 = wolfAt(tileCenter + vec2(0.0, texel.y)).a;
-  float n4 = wolfAt(tileCenter - vec2(0.0, texel.y)).a;
-  float edge = coverage * smoothstep(0.08, 0.42, abs(raw - n1) + abs(raw - n2) + abs(raw - n3) + abs(raw - n4));
-
+  float coverage = smoothstep(0.34, 0.6, wolf.a);
   vec3 wc = wolf.rgb;
   float lum = dot(wc, vec3(0.299, 0.587, 0.114));
-  vec3 chroma = wc - lum;
-  float lift = 0.26 + lum * 1.05;
-  vec3 wolfCol = clamp(chroma * 1.18 + lift, 0.0, 1.6);
-  float cyanAccent = smoothstep(0.36, 0.82, wc.b - wc.r);
-  wolfCol += vec3(0.0, 0.33, 0.62) * cyanAccent;
-  wolfCol += vec3(0.45, 0.72, 0.95) * edge * 0.34;
-  wolfCol = floor(wolfCol * 16.0 + 0.5) / 16.0;
+  vec3 chroma = wc - lum;                       // hue/colour, luminance removed
+  float lift = 0.34 + lum * 0.92;               // floor dark facets ~0.34
+  vec3 wolfCol = clamp(chroma * 1.25 + lift, 0.0, 1.7);
+  wolfCol += vec3(0.0, 0.32, 0.55) * smoothstep(0.45, 0.85, wc.b - wc.r); // cyan eye/K pop
+  wolfCol = floor(wolfCol * 14.0 + 0.5) / 14.0; // pixel-art quantise
 
-  float on;
-  float flip;
-  float sweep;
+  // --- left→right flip sweep ---
+  float on, flip;
   if(uReduced > 0.5){
-    on = coverage;
-    flip = 0.0;
-    sweep = 0.0;
+    on = coverage; flip = 0.0;
   } else {
-    float cycle = 12.0;
-    float t = mod(uTime, cycle);
-    float rowWaver = (hash21(vec2(floor(tileCenter.y * 42.0), 3.0)) - 0.5) * 0.026;
-    float jitter = (grain - 0.5) * 0.055;
-    float x = clamp(tileCenter.x + rowWaver + jitter * 0.22, 0.0, 1.0);
-
-    float head = smoothstep(0.65, 2.65, t) * 1.18 - 0.08;
-    float revealWave = 1.0 - smoothstep(0.0, 0.085, abs(head - x));
-    float revealed = smoothstep(x * 2.05 + 0.36, x * 2.05 + 0.68, t);
-    float hold = 1.0 - smoothstep(7.55 + grain * 0.65, 9.9 + grain2 * 0.85, t);
-    float ghost = 0.16 + edge * 0.18 + cyanAccent * 0.08;
-    float living = 0.018 * sin(uTime * (2.1 + grain * 2.6) + grain * 6.2831);
-    on = coverage * max(ghost, revealed * hold + living);
-    sweep = coverage * revealWave * smoothstep(0.45, 2.6, t) * (1.0 - smoothstep(3.25, 4.4, t));
-    flip = coverage * revealWave * smoothstep(0.0, 0.38, t) * (1.0 - smoothstep(3.15, 3.8, t));
+    float speed = 0.12;
+    float trail = 0.6;                          // ≈ wolf width: left clears as right lights
+    float cycle = 1.0 + trail + 0.55;           // + dark pause before looping
+    float head = mod(uTime * speed, cycle);
+    float waver = (hash21(vec2(floor(tileCenter.y * 36.0), 3.0)) - 0.5) * 0.02;
+    float phase = head - (tileCenter.x + waver);
+    float flipW = 0.05;
+    on = clamp(smoothstep(0.0, flipW, phase) * (1.0 - smoothstep(flipW, trail, phase)), 0.0, 1.0);
+    flip = (1.0 - smoothstep(0.0, flipW, abs(phase))) * step(-flipW, phase);
+    on *= coverage;
+    flip *= coverage;
   }
 
-  float squash = mix(1.0, 0.14, flip);
-  vec2 dp = tileUv / 0.5;
+  // --- dot geometry: a disc that squashes vertically while flipping ---
+  float squash = mix(1.0, 0.12, flip);          // edge-on at the flip instant
+  vec2 dp = tileUv / 0.5;                        // -1..1
   dp.y /= max(squash, 0.04);
   float aa = 2.6 * grid.y / max(uRes.y, 1.0);
-  float radius = 0.76 + grain * 0.08;
-  float disc = 1.0 - smoothstep(radius - aa, radius + aa, length(dp));
+  float disc = 1.0 - smoothstep(0.82 - aa, 0.82 + aa, length(dp));
 
-  float dead = step(0.018, grain2);
-  float boardNoise = 0.72 + grain * 0.22;
-  vec3 offCol = vec3(0.018, 0.023, 0.035) * boardNoise;
-  vec3 idleCol = vec3(0.045, 0.064, 0.085) * (0.38 + grain * 0.22);
-  float idle = 0.22 * smoothstep(0.16, 0.62, uv.x) * (1.0 - smoothstep(1.02, 1.18, uv.x));
+  // Faint dark board at rest; wolf tiles flip to their colour with a snap pop.
+  vec3 offCol = vec3(0.026, 0.030, 0.044);
+  vec3 dotCol = mix(offCol, wolfCol, on);
+  dotCol += wolfCol * flip * 0.55;
+  vec3 col = dotCol * disc;
 
-  float edgeBoost = 0.36 * edge;
-  float resolve = clamp(on + sweep * 0.68 + edgeBoost, 0.0, 1.35);
-  vec3 dotCol = mix(offCol, idleCol, idle);
-  dotCol = mix(dotCol, wolfCol, resolve);
-  dotCol += wolfCol * flip * 0.58;
-  dotCol += vec3(0.18, 0.56, 0.95) * sweep * (0.5 + cyanAccent * 0.7);
-
-  float stage = smoothstep(0.0, 0.34, uv.x) * (1.0 - smoothstep(0.96, 1.08, uv.x));
-  vec3 col = dotCol * disc * stage * dead;
-
-  float eye = coverage * cyanAccent * smoothstep(0.68, 1.05, lum + cyanAccent);
-  float eyeCore = eye * (0.72 + 0.28 * sin(uTime * 2.2));
-  col += vec3(0.22, 0.72, 1.0) * eyeCore * disc * (0.55 + sweep * 0.9);
+  // Keep the board faint on the far left so the headline stays legible.
+  col *= mix(0.28, 1.0, smoothstep(0.0, 0.34, uv.x));
 
   gl_FragColor = vec4(max(col, 0.0), 1.0);
 }
