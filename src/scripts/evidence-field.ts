@@ -34,6 +34,7 @@ if (canvas) {
   const pulses: Pulse[] = [];
   let animationId = 0;
   let time = 0;
+  let flowT = 0;
   let frame = 0;
   let nextSpawn = 24;
 
@@ -92,16 +93,29 @@ if (canvas) {
     const frontY = height * 0.98;
     const backY = height * 0.22;
     const amp = height * 0.46;
+    const swayX = width * 0.007;
 
     for (let n = 0; n < cells.length; n += 1) {
       const cell = cells[n];
-      const wobble = reducedMotion
-        ? 0
-        : Math.sin(time + cell.ti * 4 + cell.tj * 2.4) * 0.045;
-      const h = Math.max(0, Math.min(1, cell.h0 + wobble));
-      const persp = 1 - cell.tj * 0.16;
-      sx[n] = centre + (cell.ti - 0.5) * fieldW * persp;
-      sy[n] = frontY + (backY - frontY) * cell.tj - h * amp;
+      const ti = cell.ti;
+      const tj = cell.tj;
+      let h = cell.h0;
+      let lateral = 0;
+      if (!reducedMotion) {
+        // Travelling waves make the whole sheet undulate like cloth in a
+        // slow breeze; amplitude grows toward the open right edge.
+        const edge = 0.55 + 0.45 * ti;
+        const flow =
+          Math.sin(ti * 3.0 - flowT * 1.0 + tj * 0.9) * 0.06 +
+          Math.sin(ti * 6.2 - flowT * 1.7 + tj * 1.6) * 0.028 +
+          Math.sin(tj * 3.6 + flowT * 0.8) * 0.026 +
+          Math.sin((ti + tj) * 5.0 - flowT * 1.35) * 0.018;
+        h = Math.max(0, Math.min(1.1, h + flow * edge));
+        lateral = Math.sin(tj * 3.0 - flowT * 0.8 + ti * 2.2) * swayX * edge;
+      }
+      const persp = 1 - tj * 0.16;
+      sx[n] = centre + (ti - 0.5) * fieldW * persp + lateral;
+      sy[n] = frontY + (backY - frontY) * tj - h * amp;
     }
   };
 
@@ -139,7 +153,7 @@ if (canvas) {
   const render = () => {
     if (!ctx) return;
     frame += 1;
-    if (!reducedMotion) time += 0.0045;
+    if (!reducedMotion) { time += 0.0045; flowT += 0.011; }
     projectAll();
     ctx.clearRect(0, 0, width, height);
     ctx.lineWidth = 0.7;
