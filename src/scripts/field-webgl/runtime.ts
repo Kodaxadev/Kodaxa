@@ -79,9 +79,9 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean): Fi
     bloom.setSize(w * dpr, h * dpr);
     (uniforms.uRes.value as THREE.Vector2).set(w * dpr, h * dpr);
     // Tile density = "resolution" of the image. Smaller tiles → more pixels →
-    // higher-fidelity reveal. ~7px/tile on the hero (capped for perf headroom).
-    const px = ambient ? 11 : 7;
-    uniforms.uTiles.value = Math.min(ambient ? 150 : 260, Math.round(w / px));
+    // higher-fidelity reveal. ~5px/tile on the hero (measured 200+fps headroom).
+    const px = ambient ? 8 : 5;
+    uniforms.uTiles.value = Math.min(ambient ? 220 : 380, Math.round(w / px));
   };
 
   const spawnWave = () => {
