@@ -18,5 +18,13 @@ if (reduce || !('IntersectionObserver' in window)) {
     },
     { rootMargin: '0px 0px -10% 0px', threshold: 0.12 },
   );
-  items.forEach((el) => io.observe(el));
+  // Reveal anything already at or above the fold (covers deep-links and
+  // restored scroll positions); observe the rest for scroll reveal.
+  items.forEach((el) => {
+    if (el.getBoundingClientRect().top < window.innerHeight) {
+      el.classList.add('is-in');
+    } else {
+      io.observe(el);
+    }
+  });
 }
