@@ -24,6 +24,8 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean): Fi
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'high-performance' });
   renderer.setClearColor(0x06090d, 1);
+  renderer.toneMapping = THREE.NoToneMapping; // we tone-map in the shader
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   const scene = new THREE.Scene();
   const camera = new THREE.Camera();
@@ -54,7 +56,9 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean): Fi
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), ambient ? 0.55 : 0.9, 0.85, 0.2);
+  // strength, radius, threshold — threshold ~0.5 so only true highlights bloom
+  // (nebula stays saturated instead of washing to milky gray).
+  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), ambient ? 0.6 : 0.95, 0.7, 0.5);
   composer.addPass(bloom);
 
   const waves: Wave[] = [];
@@ -74,8 +78,10 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean): Fi
     composer.setSize(w, h);
     bloom.setSize(w * dpr, h * dpr);
     (uniforms.uRes.value as THREE.Vector2).set(w * dpr, h * dpr);
-    // Tile density scales gently with width so cells stay square-ish.
-    uniforms.uTiles.value = ambient ? Math.round(w / 16) : Math.round(w / 13);
+    // Tile density = "resolution" of the image. Smaller tiles → more pixels →
+    // higher-fidelity reveal. ~7px/tile on the hero (capped for perf headroom).
+    const px = ambient ? 11 : 7;
+    uniforms.uTiles.value = Math.min(ambient ? 150 : 260, Math.round(w / px));
   };
 
   const spawnWave = () => {
