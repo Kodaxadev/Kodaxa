@@ -125,9 +125,13 @@
   width: 100%;
   height: 100%;
   min-height: inherit;
-  object-fit: cover;
+  /* The plate is an information graphic, not a photo — show it whole rather
+     than cropping the side panels. 'contain' + padding frames it cleanly. */
+  object-fit: contain;
   object-position: center;
-  opacity: .9;
+  padding: clamp(1rem, 2vw, 1.6rem);
+  box-sizing: border-box;
+  opacity: .92;
   filter: saturate(.95) contrast(1.03);
 }
 .concept-visual::after {

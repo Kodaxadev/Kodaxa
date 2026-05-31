@@ -10,14 +10,6 @@ if (!prefersReducedMotion) {
     stagger: 0.11,
     ease: 'power2.out',
   });
-  gsap.from('.signal', {
-    opacity: 0,
-    y: 10,
-    delay: 0.5,
-    duration: 0.55,
-    stagger: 0.16,
-    ease: 'power2.out',
-  });
   gsap.from('.domain, .featured-system', {
     opacity: 0,
     y: 16,

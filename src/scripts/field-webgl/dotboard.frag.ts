@@ -53,37 +53,79 @@ void main(){
   vec3 chroma = wc - lum;                       // hue/colour, luminance removed
   float lift = 0.34 + lum * 0.92;               // floor dark facets ~0.34
   vec3 wolfCol = clamp(chroma * 1.25 + lift, 0.0, 1.7);
-  wolfCol += vec3(0.0, 0.32, 0.55) * smoothstep(0.45, 0.85, wc.b - wc.r); // cyan eye/K pop
+  // Cyan eye/K regions act as focal energy: a slow breathing pulse keeps them
+  // the strongest anchor on the board.
+  float cyan = smoothstep(0.45, 0.85, wc.b - wc.r);
+  float pulse = 0.85 + 0.55 * sin(uTime * 2.2);            // ~0.3..1.4, slow
+  wolfCol += vec3(0.0, 0.34, 0.6) * cyan * (0.7 + 0.6 * pulse);
+
+  // Silhouette edge glow: a tile on the wolf's outer edge (inside, but with a
+  // neighbour outside) gets a cool rim-light so the mark reads crisper without
+  // brightening the whole board. Sampled one tile-step out in each direction.
+  vec2 tstep = 1.0 / grid;
+  float nb = min(min(wolfAt(tileCenter + vec2(tstep.x, 0.0)).a,
+                     wolfAt(tileCenter - vec2(tstep.x, 0.0)).a),
+                 min(wolfAt(tileCenter + vec2(0.0, tstep.y)).a,
+                     wolfAt(tileCenter - vec2(0.0, tstep.y)).a));
+  float edge = coverage * (1.0 - smoothstep(0.18, 0.5, nb));
+  wolfCol += vec3(0.32, 0.46, 0.62) * edge * 0.7;
+
   wolfCol = floor(wolfCol * 14.0 + 0.5) / 14.0; // pixel-art quantise
 
-  // --- left→right flip sweep ---
+  // --- left→right flip sweep, then HOLD, then decay ---
+  // Lifecycle in seconds: SWEEP_DUR reveal → HOLD_DUR steady → DECAY_DUR fade →
+  // PAUSE_DUR dark. A tile lights when the moving front reaches its x and then
+  // stays on through the hold (it no longer dims the instant the front passes),
+  // so the resolved wolf reads as a brand anchor rather than a scan demo.
   float on, flip;
   if(uReduced > 0.5){
     on = coverage; flip = 0.0;
   } else {
-    float speed = 0.12;
-    float trail = 0.6;                          // ≈ wolf width: left clears as right lights
-    float cycle = 1.0 + trail + 0.55;           // + dark pause before looping
-    float head = mod(uTime * speed, cycle);
+    const float SWEEP_DUR = 4.0;   // front travels across (s)
+    const float HOLD_DUR  = 3.0;   // fully-resolved hold (s)
+    const float DECAY_DUR = 3.5;   // organic fade-out (s)
+    const float PAUSE_DUR = 1.8;   // dark gap before restart (s)
+    const float TOTAL = SWEEP_DUR + HOLD_DUR + DECAY_DUR + PAUSE_DUR;
+
+    float t = mod(uTime, TOTAL);
     float waver = (hash21(vec2(floor(tileCenter.y * 36.0), 3.0)) - 0.5) * 0.02;
-    float phase = head - (tileCenter.x + waver);
+    float litX = tileCenter.x + waver;          // when (0..1) this column's front arrives
     float flipW = 0.05;
-    on = clamp(smoothstep(0.0, flipW, phase) * (1.0 - smoothstep(flipW, trail, phase)), 0.0, 1.0);
-    flip = (1.0 - smoothstep(0.0, flipW, abs(phase))) * step(-flipW, phase);
-    on *= coverage;
-    flip *= coverage;
+
+    // Reveal: front position 0→1 over SWEEP_DUR; tile turns on as it passes.
+    float head = (t / SWEEP_DUR);
+    float reveal = smoothstep(litX - flipW, litX + flipW, head);
+
+    // Decay: during the decay window all tiles fade, slightly staggered.
+    float decayT = clamp((t - (SWEEP_DUR + HOLD_DUR)) / DECAY_DUR, 0.0, 1.0);
+    float fade = 1.0 - smoothstep(0.0, 1.0, decayT + waver * 4.0);
+
+    on = (t < SWEEP_DUR + HOLD_DUR) ? reveal : (t < SWEEP_DUR + HOLD_DUR + DECAY_DUR ? fade : 0.0);
+    on = clamp(on, 0.0, 1.0) * coverage;
+
+    // Flip pop only at the advancing front during the sweep.
+    flip = (t < SWEEP_DUR) ? (1.0 - smoothstep(0.0, flipW, abs(head - litX))) * coverage : 0.0;
   }
+
+  // --- per-dot physical variance (stable per tile): size, brightness, and
+  // the occasional dim/dead cell, so it reads as an engineered display wall
+  // rather than a flat raster ---
+  float rnd = hash21(tileId + 1.7);
+  float rnd2 = hash21(tileId + 9.3);
+  float sizeVar = 0.78 + rnd * 0.09;            // dot radius threshold ~0.78..0.87
+  float dimDot = rnd2 > 0.965 ? 1.0 : 0.0;      // ~3.5% of cells are dim/dead
+  float bright = (0.82 + rnd2 * 0.26) * (1.0 - dimDot * 0.72);
 
   // --- dot geometry: a disc that squashes vertically while flipping ---
   float squash = mix(1.0, 0.12, flip);          // edge-on at the flip instant
   vec2 dp = tileUv / 0.5;                        // -1..1
   dp.y /= max(squash, 0.04);
   float aa = 2.6 * grid.y / max(uRes.y, 1.0);
-  float disc = 1.0 - smoothstep(0.82 - aa, 0.82 + aa, length(dp));
+  float disc = 1.0 - smoothstep(sizeVar - aa, sizeVar + aa, length(dp));
 
   // Faint dark board at rest; wolf tiles flip to their colour with a snap pop.
   vec3 offCol = vec3(0.026, 0.030, 0.044);
-  vec3 dotCol = mix(offCol, wolfCol, on);
+  vec3 dotCol = mix(offCol, wolfCol * bright, on);
   dotCol += wolfCol * flip * 0.55;
   vec3 col = dotCol * disc;
 
