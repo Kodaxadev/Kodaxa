@@ -53,7 +53,11 @@ void main(){
   vec3 chroma = wc - lum;                       // hue/colour, luminance removed
   float lift = 0.34 + lum * 0.92;               // floor dark facets ~0.34
   vec3 wolfCol = clamp(chroma * 1.25 + lift, 0.0, 1.7);
-  wolfCol += vec3(0.0, 0.32, 0.55) * smoothstep(0.45, 0.85, wc.b - wc.r); // cyan eye/K pop
+  // Cyan eye/K regions act as focal energy: a slow breathing pulse keeps them
+  // the strongest anchor on the board.
+  float cyan = smoothstep(0.45, 0.85, wc.b - wc.r);
+  float pulse = 0.85 + 0.55 * sin(uTime * 2.2);            // ~0.3..1.4, slow
+  wolfCol += vec3(0.0, 0.34, 0.6) * cyan * (0.7 + 0.6 * pulse);
   wolfCol = floor(wolfCol * 14.0 + 0.5) / 14.0; // pixel-art quantise
 
   // --- left→right flip sweep, then HOLD, then decay ---
