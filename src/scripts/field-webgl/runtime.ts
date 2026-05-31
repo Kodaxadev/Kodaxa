@@ -10,7 +10,7 @@ export type FieldHandle = { destroy: () => void };
 
 const LOGO_ASPECT = 248 / 340; // w/h of the mark texture
 
-export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean): FieldHandle {
+export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean, glyph = 0): FieldHandle {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   // ?reveal=full freezes the fully-revealed mark (design/debug aid).
   const frozen = reduced || new URLSearchParams(location.search).get('reveal') === 'full';
@@ -39,6 +39,7 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean): Fi
     uReduced: { value: frozen ? 1 : 0 },
     uLogo: { value: logoTex },
     uLogoRect: { value: new THREE.Vector4(0.55, 0.13, 0.3, 0.74) },
+    uGlyph: { value: glyph },
   };
 
   // Place the mark center-right (clear of the headline), preserving aspect.
@@ -72,10 +73,11 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean): Fi
     renderer.setSize(w, h, false);
     (uniforms.uRes.value as THREE.Vector2).set(w * dpr, h * dpr);
     placeLogo(w, h);
-    // Tile density = board "resolution"; smaller tiles → sharper wolf. The
-    // wolf only occupies ~⅓ of the width, so push density up for an HD mark.
-    const px = ambient ? 6 : 4;
-    uniforms.uTiles.value = Math.min(ambient ? 280 : 480, Math.round(w / px));
+    // Tile density = board "resolution"; smaller tiles → finer board. Hero
+    // pushes high for an HD wolf; ambient is denser now too so the side panels
+    // read fine and schematic rather than toy-like.
+    const px = ambient ? 4.5 : 4;
+    uniforms.uTiles.value = Math.min(ambient ? 420 : 480, Math.round(w / px));
   };
 
   const clock = new THREE.Clock();

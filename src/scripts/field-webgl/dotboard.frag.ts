@@ -8,6 +8,8 @@
 //
 // The target image is sampled from the wolf-mark texture (uLogo) placed in the
 // uLogoRect region of UV space. No starfield, no nebula — just the board.
+import { glyphsFrag } from './glyphs.frag';
+
 export const dotboardFrag = /* glsl */ `
 precision highp float;
 varying vec2 vUv;
@@ -18,6 +20,7 @@ uniform float     uTiles;
 uniform float     uReduced;     // 1.0 = freeze fully-revealed mark
 uniform sampler2D uLogo;        // wolf mark (RGBA, alpha = coverage)
 uniform vec4      uLogoRect;    // x, y, w, h in uv space
+uniform int       uGlyph;       // 0 = wolf texture; >0 = procedural project glyph
 
 float aspect;
 
@@ -26,6 +29,7 @@ float hash21(vec2 p){
   p += dot(p, p + 34.345);
   return fract(p.x * p.y);
 }
+` + glyphsFrag + /* glsl */ `
 
 // Sample the wolf mark at a uv point → rgb + coverage(alpha).
 vec4 wolfAt(vec2 uv){
@@ -44,33 +48,46 @@ void main(){
   vec2 tileUv = fract(cell) - 0.5;
   vec2 tileCenter = (tileId + 0.5) / grid;
 
-  // --- this dot's target: the wolf-mark colour, lifted so dark facets still
-  // read clearly against black while keeping the facet shading (3D form) ---
-  vec4 wolf = wolfAt(tileCenter);
-  float coverage = smoothstep(0.34, 0.6, wolf.a);
-  vec3 wc = wolf.rgb;
-  float lum = dot(wc, vec3(0.299, 0.587, 0.114));
-  vec3 chroma = wc - lum;                       // hue/colour, luminance removed
-  float lift = 0.34 + lum * 0.92;               // floor dark facets ~0.34
-  vec3 wolfCol = clamp(chroma * 1.25 + lift, 0.0, 1.7);
-  // Cyan eye/K regions act as focal energy: a slow breathing pulse keeps them
-  // the strongest anchor on the board.
-  float cyan = smoothstep(0.45, 0.85, wc.b - wc.r);
   float pulse = 0.85 + 0.55 * sin(uTime * 2.2);            // ~0.3..1.4, slow
-  wolfCol += vec3(0.0, 0.34, 0.6) * cyan * (0.7 + 0.6 * pulse);
-
-  // Silhouette edge glow: a tile on the wolf's outer edge (inside, but with a
-  // neighbour outside) gets a cool rim-light so the mark reads crisper without
-  // brightening the whole board. Sampled one tile-step out in each direction.
   vec2 tstep = 1.0 / grid;
-  float nb = min(min(wolfAt(tileCenter + vec2(tstep.x, 0.0)).a,
-                     wolfAt(tileCenter - vec2(tstep.x, 0.0)).a),
-                 min(wolfAt(tileCenter + vec2(0.0, tstep.y)).a,
-                     wolfAt(tileCenter - vec2(0.0, tstep.y)).a));
-  float edge = coverage * (1.0 - smoothstep(0.18, 0.5, nb));
-  wolfCol += vec3(0.32, 0.46, 0.62) * edge * 0.7;
+  float coverage;
+  vec3 wolfCol;
 
-  wolfCol = floor(wolfCol * 14.0 + 0.5) / 14.0; // pixel-art quantise
+  if(uGlyph > 0){
+    // --- procedural project glyph: schematic cool-toned mask ---
+    vec2 gp = vec2((tileCenter.x - 0.5) * aspect, tileCenter.y - 0.5);
+    vec2 g = glyphMask(uGlyph, gp);
+    coverage = g.x;
+    // Cool slate base; accent (focal) parts pulse cyan like the wolf's eye.
+    vec3 base = vec3(0.46, 0.60, 0.74);
+    wolfCol = base;
+    wolfCol += vec3(0.0, 0.34, 0.6) * g.y * (0.7 + 0.6 * pulse);
+    // Edge glow: neighbour outside the glyph → rim light.
+    float gnb = min(min(glyphMask(uGlyph, gp + vec2(tstep.x*aspect,0.0)).x,
+                        glyphMask(uGlyph, gp - vec2(tstep.x*aspect,0.0)).x),
+                    min(glyphMask(uGlyph, gp + vec2(0.0,tstep.y)).x,
+                        glyphMask(uGlyph, gp - vec2(0.0,tstep.y)).x));
+    wolfCol += vec3(0.32, 0.46, 0.62) * coverage * (1.0 - smoothstep(0.18, 0.5, gnb)) * 0.6;
+    wolfCol = floor(wolfCol * 14.0 + 0.5) / 14.0;
+  } else {
+    // --- wolf-mark texture: lifted so dark facets read against black ---
+    vec4 wolf = wolfAt(tileCenter);
+    coverage = smoothstep(0.34, 0.6, wolf.a);
+    vec3 wc = wolf.rgb;
+    float lum = dot(wc, vec3(0.299, 0.587, 0.114));
+    vec3 chroma = wc - lum;
+    float lift = 0.34 + lum * 0.92;
+    wolfCol = clamp(chroma * 1.25 + lift, 0.0, 1.7);
+    float cyan = smoothstep(0.45, 0.85, wc.b - wc.r);
+    wolfCol += vec3(0.0, 0.34, 0.6) * cyan * (0.7 + 0.6 * pulse);
+    float nb = min(min(wolfAt(tileCenter + vec2(tstep.x, 0.0)).a,
+                       wolfAt(tileCenter - vec2(tstep.x, 0.0)).a),
+                   min(wolfAt(tileCenter + vec2(0.0, tstep.y)).a,
+                       wolfAt(tileCenter - vec2(0.0, tstep.y)).a));
+    float edge = coverage * (1.0 - smoothstep(0.18, 0.5, nb));
+    wolfCol += vec3(0.32, 0.46, 0.62) * edge * 0.7;
+    wolfCol = floor(wolfCol * 14.0 + 0.5) / 14.0;
+  }
 
   // --- left→right flip sweep, then HOLD, then decay ---
   // Lifecycle in seconds: SWEEP_DUR reveal → HOLD_DUR steady → DECAY_DUR fade →
