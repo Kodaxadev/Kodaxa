@@ -22,7 +22,10 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean): Fi
   const scene = new THREE.Scene();
   const camera = new THREE.Camera();
 
-  const logoTex = new THREE.TextureLoader().load('/assets/brand/kodaxa-mark.png', () => {
+  // Hero uses a flare-trimmed mark: the eye's horizontal lens-flare streak in
+  // the original reads as an "eye laser" row of dots on the flip-dot board.
+  // The header/footer keep the original mark (the glint looks fine there).
+  const logoTex = new THREE.TextureLoader().load('/assets/brand/kodaxa-mark-hero.png', () => {
     if (frozen) renderer.render(scene, camera); // re-render the still once loaded
   });
   logoTex.colorSpace = THREE.SRGBColorSpace;
