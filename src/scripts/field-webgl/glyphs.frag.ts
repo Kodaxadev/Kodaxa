@@ -28,48 +28,46 @@ float stroke(float d, float t){ return 1.0 - smoothstep(t, t + 0.014, abs(d)); }
 // fill an SDF (inside) into a 0..1 mask
 float solid(float d){ return 1.0 - smoothstep(0.0, 0.014, d); }
 
-// Heater-shield SDF (one continuous field, no waist seam). r = half width.
-// Top at y=+top; flat shoulders + vertical upper sides; lower half is a smooth
-// parabola-like taper to a point at y=-bot. Distance approximated from the
-// boundary curve so a single stroke() gives a clean even outline.
-float sdShield(vec2 p, float r){
-  float top = 0.78 * r;     // shoulder height
-  float bot = 1.18 * r;     // tip depth
-  float x = abs(p.x);
-  // Boundary half-width as a function of y:
-  //  - above 0: vertical sides at x = r (flat top handled separately)
-  //  - below 0: width eases to 0 at the tip via a smooth curve
-  float wy;
-  if(p.y >= 0.0){
-    wy = r;
-  } else {
-    float t = clamp(-p.y / bot, 0.0, 1.0);    // 0 waist → 1 tip
-    wy = r * sqrt(max(1.0 - t * t, 0.0));     // circular-ish ogee, smooth at waist
-  }
-  // signed distance: combine the side curve, the flat top, and the tip.
-  float dSide = x - wy;                        // <0 inside horizontally
-  float dTop  = p.y - top;                     // <0 below the top edge
-  float dBot  = (-bot) - p.y;                  // <0 above the tip
-  return max(max(dSide, dTop), dBot);
-}
-
-// ---------- FrontierWarden: proof-backed trust shield + gate + check ----------
-// Trust + Reputation + Credit → a SHIELD (standing/protection) containing a
-// GATE aperture (the allow/deny decision) and a VERIFIED check (proof-backed).
+// ---------- FrontierWarden: evidence gate ----------
+// The project EVALUATES and EXPOSES evidence; operators retain control. So the
+// mark is an open hexagonal GATE (capability object) with EVIDENCE nodes
+// feeding in from the left, one bright VERIFIED PATH through it (the focal
+// accent), and a separated tenant POLICY KEY at the lower right — not a shield
+// or lock (those imply centralized pass/fail authority).
 vec2 glyphFrontierWarden(vec2 p){
   float cov = 0.0;
   float acc = 0.0;
 
-  float r = 0.36;
-  // Single clean bold shield outline (no inner line — it read as a stray bar).
-  cov = max(cov, stroke(sdShield(p, r), 0.016));
+  // Center: large open hexagon gate (flat-top), bold outline. Shifted slightly
+  // right to leave room for the evidence feed on the left.
+  vec2 hp = p - vec2(0.05, 0.02);
+  float hex = sdHexagon(hp.yx, 0.30);         // .yx → flat-top gate aperture
+  cov = max(cov, stroke(hex, 0.016));
 
-  // One bold verified check centred in the shield → proof-backed trust. The
-  // check is the focal/energy element (cyan pulse). Sized to sit comfortably
-  // inside the shield body with even margins.
-  float c1 = sdSegment(p, vec2(-0.155, -0.05), vec2(-0.035, -0.19));
-  float c2 = sdSegment(p, vec2(-0.035, -0.19), vec2(0.175, 0.13));
-  acc = max(acc, stroke(min(c1, c2), 0.024));
+  // Left: three evidence nodes + connectors feeding toward the gate's left face.
+  vec2 ev[3];
+  ev[0] = vec2(-0.46, 0.13);
+  ev[1] = vec2(-0.46, 0.00);
+  ev[2] = vec2(-0.46, -0.13);
+  for(int i = 0; i < 3; i++){
+    cov = max(cov, solid(sdCircle(p - ev[i], 0.025)));
+    cov = max(cov, stroke(sdSegment(p, ev[i] + vec2(0.03, 0.0), vec2(-0.22, ev[i].y * 0.4)), 0.008));
+  }
+
+  // Inside: one bright verified path THROUGH the gate (enters left, exits right
+  // to a verified terminus just outside the far face). The focal accent.
+  float pth = min(
+    sdSegment(p, vec2(-0.20, 0.0), vec2(0.05, 0.06)),
+    sdSegment(p, vec2(0.05, 0.06), vec2(0.33, -0.04))
+  );
+  acc = max(acc, stroke(pth, 0.016));
+  acc = max(acc, solid(sdCircle(p - vec2(0.34, -0.05), 0.030)));  // verified terminus
+
+  // Lower right: separated tenant policy key — a small ring + stem held apart
+  // from the gate, signalling operator-owned control (not central authority).
+  cov = max(cov, stroke(sdCircle(p - vec2(0.20, -0.34), 0.045), 0.011));   // key bow (ring)
+  cov = max(cov, stroke(sdSegment(p, vec2(0.245, -0.34), vec2(0.40, -0.34)), 0.011)); // shaft
+  cov = max(cov, stroke(sdSegment(p, vec2(0.38, -0.34), vec2(0.38, -0.27)), 0.011));  // bit
 
   return vec2(clamp(cov, 0.0, 1.0), clamp(acc, 0.0, 1.0));
 }
