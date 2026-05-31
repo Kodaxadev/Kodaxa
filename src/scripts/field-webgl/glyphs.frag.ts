@@ -28,25 +28,29 @@ float stroke(float d, float t){ return 1.0 - smoothstep(t, t + 0.014, abs(d)); }
 // fill an SDF (inside) into a 0..1 mask
 float solid(float d){ return 1.0 - smoothstep(0.0, 0.014, d); }
 
-// Shield SDF: a crest — flat top, straight sides, curving to a point. r = half
-// width, the body runs roughly y∈[-1.15r, 0.95r].
+// Heater-shield SDF (one continuous field, no waist seam). r = half width.
+// Top at y=+top; flat shoulders + vertical upper sides; lower half is a smooth
+// parabola-like taper to a point at y=-bot. Distance approximated from the
+// boundary curve so a single stroke() gives a clean even outline.
 float sdShield(vec2 p, float r){
-  float top = 0.95 * r;
-  float d;
-  if(p.y > 0.0){
-    // upper body: rounded rectangle-ish (flat shoulders)
-    vec2 q = abs(vec2(p.x, p.y)) - vec2(r, top);
-    d = min(max(q.x, q.y), 0.0) + length(max(q, 0.0));
+  float top = 0.78 * r;     // shoulder height
+  float bot = 1.18 * r;     // tip depth
+  float x = abs(p.x);
+  // Boundary half-width as a function of y:
+  //  - above 0: vertical sides at x = r (flat top handled separately)
+  //  - below 0: width eases to 0 at the tip via a smooth curve
+  float wy;
+  if(p.y >= 0.0){
+    wy = r;
   } else {
-    // lower body tapers to a point at y = -1.15r
-    float tip = -1.15 * r;
-    float t = clamp(p.y / tip, 0.0, 1.0);     // 0 at waist → 1 at tip
-    float halfW = r * (1.0 - t * t);          // width shrinks toward the point
-    d = abs(p.x) - halfW;
-    d = max(d, p.y - 0.0);
-    d = max(d, tip - p.y);
+    float t = clamp(-p.y / bot, 0.0, 1.0);    // 0 waist → 1 tip
+    wy = r * sqrt(max(1.0 - t * t, 0.0));     // circular-ish ogee, smooth at waist
   }
-  return d;
+  // signed distance: combine the side curve, the flat top, and the tip.
+  float dSide = x - wy;                        // <0 inside horizontally
+  float dTop  = p.y - top;                     // <0 below the top edge
+  float dBot  = (-bot) - p.y;                  // <0 above the tip
+  return max(max(dSide, dTop), dBot);
 }
 
 // ---------- FrontierWarden: proof-backed trust shield + gate + check ----------
@@ -56,18 +60,16 @@ vec2 glyphFrontierWarden(vec2 p){
   float cov = 0.0;
   float acc = 0.0;
 
-  float r = 0.34;
-  float sh = sdShield(p, r);
-  // Shield outline (bold) + a faint inner outline for depth.
-  cov = max(cov, stroke(sh, 0.015));
-  cov = max(cov, stroke(sdShield(p, r * 0.80), 0.008) * 0.65);
+  float r = 0.36;
+  // Single clean bold shield outline (no inner line — it read as a stray bar).
+  cov = max(cov, stroke(sdShield(p, r), 0.016));
 
-  // One bold verified check centred in the shield → proof-backed trust. Kept
-  // simple (no gate posts) so it reads unmistakably at dot resolution. The
-  // check is the focal/energy element (cyan pulse).
-  float c1 = sdSegment(p, vec2(-0.15, -0.04), vec2(-0.02, -0.20));
-  float c2 = sdSegment(p, vec2(-0.02, -0.20), vec2(0.18, 0.16));
-  acc = max(acc, stroke(min(c1, c2), 0.026));
+  // One bold verified check centred in the shield → proof-backed trust. The
+  // check is the focal/energy element (cyan pulse). Sized to sit comfortably
+  // inside the shield body with even margins.
+  float c1 = sdSegment(p, vec2(-0.155, -0.05), vec2(-0.035, -0.19));
+  float c2 = sdSegment(p, vec2(-0.035, -0.19), vec2(0.175, 0.13));
+  acc = max(acc, stroke(min(c1, c2), 0.024));
 
   return vec2(clamp(cov, 0.0, 1.0), clamp(acc, 0.0, 1.0));
 }
