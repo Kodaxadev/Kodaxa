@@ -58,6 +58,18 @@ void main(){
   float cyan = smoothstep(0.45, 0.85, wc.b - wc.r);
   float pulse = 0.85 + 0.55 * sin(uTime * 2.2);            // ~0.3..1.4, slow
   wolfCol += vec3(0.0, 0.34, 0.6) * cyan * (0.7 + 0.6 * pulse);
+
+  // Silhouette edge glow: a tile on the wolf's outer edge (inside, but with a
+  // neighbour outside) gets a cool rim-light so the mark reads crisper without
+  // brightening the whole board. Sampled one tile-step out in each direction.
+  vec2 tstep = 1.0 / grid;
+  float nb = min(min(wolfAt(tileCenter + vec2(tstep.x, 0.0)).a,
+                     wolfAt(tileCenter - vec2(tstep.x, 0.0)).a),
+                 min(wolfAt(tileCenter + vec2(0.0, tstep.y)).a,
+                     wolfAt(tileCenter - vec2(0.0, tstep.y)).a));
+  float edge = coverage * (1.0 - smoothstep(0.18, 0.5, nb));
+  wolfCol += vec3(0.32, 0.46, 0.62) * edge * 0.7;
+
   wolfCol = floor(wolfCol * 14.0 + 0.5) / 14.0; // pixel-art quantise
 
   // --- left→right flip sweep, then HOLD, then decay ---
@@ -101,7 +113,7 @@ void main(){
   float rnd = hash21(tileId + 1.7);
   float rnd2 = hash21(tileId + 9.3);
   float sizeVar = 0.78 + rnd * 0.09;            // dot radius threshold ~0.78..0.87
-  float dimDot = step(0.965, rnd2);             // ~3.5% of cells are dim/dead
+  float dimDot = rnd2 > 0.965 ? 1.0 : 0.0;      // ~3.5% of cells are dim/dead
   float bright = (0.82 + rnd2 * 0.26) * (1.0 - dimDot * 0.72);
 
   // --- dot geometry: a disc that squashes vertically while flipping ---
