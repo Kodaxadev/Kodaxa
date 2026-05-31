@@ -57,16 +57,18 @@ void main(){
     // --- procedural project glyph: schematic cool-toned mask ---
     vec2 gp = vec2((tileCenter.x - 0.5) * aspect, tileCenter.y - 0.5);
     vec2 g = glyphMask(uGlyph, gp);
-    coverage = g.x;
+    coverage = max(g.x, g.y);   // accent dots are lit too (g.y = focal check)
     // Cool slate base; accent (focal) parts pulse cyan like the wolf's eye.
     vec3 base = vec3(0.46, 0.60, 0.74);
     wolfCol = base;
-    wolfCol += vec3(0.0, 0.34, 0.6) * g.y * (0.7 + 0.6 * pulse);
-    // Edge glow: neighbour outside the glyph → rim light.
-    float gnb = min(min(glyphMask(uGlyph, gp + vec2(tstep.x*aspect,0.0)).x,
-                        glyphMask(uGlyph, gp - vec2(tstep.x*aspect,0.0)).x),
-                    min(glyphMask(uGlyph, gp + vec2(0.0,tstep.y)).x,
-                        glyphMask(uGlyph, gp - vec2(0.0,tstep.y)).x));
+    wolfCol += vec3(0.0, 0.40, 0.7) * g.y * (0.7 + 0.6 * pulse);
+    // Edge glow: neighbour outside the glyph → rim light (combined coverage).
+    vec2 gnL = glyphMask(uGlyph, gp - vec2(tstep.x*aspect,0.0));
+    vec2 gnR = glyphMask(uGlyph, gp + vec2(tstep.x*aspect,0.0));
+    vec2 gnD = glyphMask(uGlyph, gp - vec2(0.0,tstep.y));
+    vec2 gnU = glyphMask(uGlyph, gp + vec2(0.0,tstep.y));
+    float gnb = min(min(max(gnL.x,gnL.y), max(gnR.x,gnR.y)),
+                    min(max(gnD.x,gnD.y), max(gnU.x,gnU.y)));
     wolfCol += vec3(0.32, 0.46, 0.62) * coverage * (1.0 - smoothstep(0.18, 0.5, gnb)) * 0.6;
     wolfCol = floor(wolfCol * 14.0 + 0.5) / 14.0;
   } else {
