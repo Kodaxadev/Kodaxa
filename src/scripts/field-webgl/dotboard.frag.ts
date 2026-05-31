@@ -56,22 +56,39 @@ void main(){
   wolfCol += vec3(0.0, 0.32, 0.55) * smoothstep(0.45, 0.85, wc.b - wc.r); // cyan eye/K pop
   wolfCol = floor(wolfCol * 14.0 + 0.5) / 14.0; // pixel-art quantise
 
-  // --- left→right flip sweep ---
+  // --- left→right flip sweep, then HOLD, then decay ---
+  // Lifecycle in seconds: SWEEP_DUR reveal → HOLD_DUR steady → DECAY_DUR fade →
+  // PAUSE_DUR dark. A tile lights when the moving front reaches its x and then
+  // stays on through the hold (it no longer dims the instant the front passes),
+  // so the resolved wolf reads as a brand anchor rather than a scan demo.
   float on, flip;
   if(uReduced > 0.5){
     on = coverage; flip = 0.0;
   } else {
-    float speed = 0.12;
-    float trail = 0.6;                          // ≈ wolf width: left clears as right lights
-    float cycle = 1.0 + trail + 0.55;           // + dark pause before looping
-    float head = mod(uTime * speed, cycle);
+    const float SWEEP_DUR = 4.0;   // front travels across (s)
+    const float HOLD_DUR  = 3.0;   // fully-resolved hold (s)
+    const float DECAY_DUR = 3.5;   // organic fade-out (s)
+    const float PAUSE_DUR = 1.8;   // dark gap before restart (s)
+    const float TOTAL = SWEEP_DUR + HOLD_DUR + DECAY_DUR + PAUSE_DUR;
+
+    float t = mod(uTime, TOTAL);
     float waver = (hash21(vec2(floor(tileCenter.y * 36.0), 3.0)) - 0.5) * 0.02;
-    float phase = head - (tileCenter.x + waver);
+    float litX = tileCenter.x + waver;          // when (0..1) this column's front arrives
     float flipW = 0.05;
-    on = clamp(smoothstep(0.0, flipW, phase) * (1.0 - smoothstep(flipW, trail, phase)), 0.0, 1.0);
-    flip = (1.0 - smoothstep(0.0, flipW, abs(phase))) * step(-flipW, phase);
-    on *= coverage;
-    flip *= coverage;
+
+    // Reveal: front position 0→1 over SWEEP_DUR; tile turns on as it passes.
+    float head = (t / SWEEP_DUR);
+    float reveal = smoothstep(litX - flipW, litX + flipW, head);
+
+    // Decay: during the decay window all tiles fade, slightly staggered.
+    float decayT = clamp((t - (SWEEP_DUR + HOLD_DUR)) / DECAY_DUR, 0.0, 1.0);
+    float fade = 1.0 - smoothstep(0.0, 1.0, decayT + waver * 4.0);
+
+    on = (t < SWEEP_DUR + HOLD_DUR) ? reveal : (t < SWEEP_DUR + HOLD_DUR + DECAY_DUR ? fade : 0.0);
+    on = clamp(on, 0.0, 1.0) * coverage;
+
+    // Flip pop only at the advancing front during the sweep.
+    flip = (t < SWEEP_DUR) ? (1.0 - smoothstep(0.0, flipW, abs(head - litX))) * coverage : 0.0;
   }
 
   // --- dot geometry: a disc that squashes vertically while flipping ---
