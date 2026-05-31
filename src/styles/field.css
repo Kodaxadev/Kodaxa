@@ -28,35 +28,68 @@
     radial-gradient(140% 130% at 50% 42%, transparent 26%, rgba(6, 9, 13, .74) 76%),
     linear-gradient(0deg, var(--bg), transparent 32%);
 }
-.signal {
+/* Terminal status readout — reads like the board's own diagnostic log,
+   anchored in the dark lower-left negative space (clear of wolf + headline). */
+.signal-readout {
   position: absolute;
   z-index: 2;
-  padding: .5rem .62rem;
-  border: 1px solid rgba(147, 194, 210, .3);
-  background: rgba(6, 10, 14, .72);
-  color: var(--blue-soft);
-  font: .54rem/1 var(--mono);
+  left: var(--pad);
+  bottom: clamp(2rem, 5vw, 3.4rem);
+  font: .58rem/1 var(--mono);
   letter-spacing: .16em;
   text-transform: uppercase;
-  white-space: nowrap;
+  color: var(--text-muted);
+  pointer-events: none;
 }
-.signal::before {
-  content: '';
-  position: absolute;
-  top: .62rem;
-  left: -.42rem;
-  width: 4px;
-  height: 4px;
+.signal-readout__head {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  margin: 0 0 .85rem;
+  color: var(--blue-soft);
+  font-size: .55rem;
+  letter-spacing: .22em;
+}
+.signal-readout__dot {
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: var(--blue-soft);
-  box-shadow: 0 0 8px rgba(102, 169, 196, .6);
+  box-shadow: 0 0 9px rgba(102, 169, 196, .8);
+  animation: signal-pulse 2.4s ease-in-out infinite;
 }
-.signal::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 1.1rem;
-  width: 1px;
-  height: 1.7rem;
-  background: linear-gradient(180deg, rgba(147, 194, 210, .5), transparent);
+.signal-readout ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: .5rem;
+}
+.signal-readout li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 7.5rem auto;
+  align-items: baseline;
+  border-left: 1px solid rgba(147, 194, 210, .35);
+  padding-left: .7rem;
+  opacity: 0;
+  transform: translateX(-4px);
+  animation: signal-line-in .5s ease forwards;
+  animation-delay: calc(.5s + var(--i) * .55s);
+}
+.signal-readout li span { color: var(--text-muted); }
+.signal-readout li b {
+  font-weight: 400;
+  color: var(--blue-soft);
+}
+@keyframes signal-pulse {
+  0%, 100% { opacity: .45; }
+  50% { opacity: 1; }
+}
+@keyframes signal-line-in {
+  to { opacity: 1; transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .signal-readout li { opacity: 1; transform: none; animation: none; }
+  .signal-readout__dot { animation: none; }
 }

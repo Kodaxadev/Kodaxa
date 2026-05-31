@@ -9,9 +9,6 @@
   overflow: hidden;
   border-bottom: var(--hairline);
 }
-.signal--verified { left: 55%; top: 29%; }
-.signal--context { left: 75%; top: 20%; }
-.signal--aligned { left: 57%; top: 52%; }
 .hero-copy {
   position: relative;
   z-index: 3;
@@ -237,9 +234,6 @@
   .hero { min-height: 40rem; }
   .hero h1 { font-size: clamp(3rem, 12vw, 4.4rem); }
   .hero-lede { font-size: .68rem; }
-  .signal--verified { left: 50%; top: 56%; }
-  .signal--context { left: 70%; top: 44%; }
-  .signal--aligned { left: 46%; top: 70%; }
   .domains { grid-template-columns: 1fr; }
   .domain { min-height: auto; border-right: 0; border-bottom: var(--hairline); }
   .domain:last-child { border-bottom: 0; }
@@ -248,8 +242,4 @@
   .hero-actions { display: grid; justify-items: start; }
   .system-status { grid-template-columns: repeat(2, 1fr); }
   .featured-copy .actions { display: grid; justify-items: start; }
-  .signal { font-size: .5rem; padding: .42rem .5rem; }
-  .signal--verified { left: 7%; top: 60%; }
-  .signal--context { left: 47%; top: 55%; }
-  .signal--aligned { left: 13%; top: 71%; }
 }
