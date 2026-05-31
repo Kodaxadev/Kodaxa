@@ -95,16 +95,25 @@ void main(){
     flip = (t < SWEEP_DUR) ? (1.0 - smoothstep(0.0, flipW, abs(head - litX))) * coverage : 0.0;
   }
 
+  // --- per-dot physical variance (stable per tile): size, brightness, and
+  // the occasional dim/dead cell, so it reads as an engineered display wall
+  // rather than a flat raster ---
+  float rnd = hash21(tileId + 1.7);
+  float rnd2 = hash21(tileId + 9.3);
+  float sizeVar = 0.78 + rnd * 0.09;            // dot radius threshold ~0.78..0.87
+  float dimDot = step(0.965, rnd2);             // ~3.5% of cells are dim/dead
+  float bright = (0.82 + rnd2 * 0.26) * (1.0 - dimDot * 0.72);
+
   // --- dot geometry: a disc that squashes vertically while flipping ---
   float squash = mix(1.0, 0.12, flip);          // edge-on at the flip instant
   vec2 dp = tileUv / 0.5;                        // -1..1
   dp.y /= max(squash, 0.04);
   float aa = 2.6 * grid.y / max(uRes.y, 1.0);
-  float disc = 1.0 - smoothstep(0.82 - aa, 0.82 + aa, length(dp));
+  float disc = 1.0 - smoothstep(sizeVar - aa, sizeVar + aa, length(dp));
 
   // Faint dark board at rest; wolf tiles flip to their colour with a snap pop.
   vec3 offCol = vec3(0.026, 0.030, 0.044);
-  vec3 dotCol = mix(offCol, wolfCol, on);
+  vec3 dotCol = mix(offCol, wolfCol * bright, on);
   dotCol += wolfCol * flip * 0.55;
   vec3 col = dotCol * disc;
 
