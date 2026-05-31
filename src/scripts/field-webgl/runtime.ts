@@ -72,9 +72,10 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean): Fi
     renderer.setSize(w, h, false);
     (uniforms.uRes.value as THREE.Vector2).set(w * dpr, h * dpr);
     placeLogo(w, h);
-    // Tile density = board "resolution"; smaller tiles → sharper wolf.
-    const px = ambient ? 7 : 5;
-    uniforms.uTiles.value = Math.min(ambient ? 240 : 360, Math.round(w / px));
+    // Tile density = board "resolution"; smaller tiles → sharper wolf. The
+    // wolf only occupies ~⅓ of the width, so push density up for an HD mark.
+    const px = ambient ? 6 : 4;
+    uniforms.uTiles.value = Math.min(ambient ? 280 : 480, Math.round(w / px));
   };
 
   const clock = new THREE.Clock();

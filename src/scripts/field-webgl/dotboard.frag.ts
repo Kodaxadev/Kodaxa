@@ -107,14 +107,13 @@ void main(){
     flip = (t < SWEEP_DUR) ? (1.0 - smoothstep(0.0, flipW, abs(head - litX))) * coverage : 0.0;
   }
 
-  // --- per-dot physical variance (stable per tile): size, brightness, and
-  // the occasional dim/dead cell, so it reads as an engineered display wall
-  // rather than a flat raster ---
+  // --- subtle per-dot variance (stable per tile): a whisper of size and
+  // brightness jitter for a physical feel — no dead cells (they read as
+  // missing pixels on the logo). ---
   float rnd = hash21(tileId + 1.7);
   float rnd2 = hash21(tileId + 9.3);
-  float sizeVar = 0.78 + rnd * 0.09;            // dot radius threshold ~0.78..0.87
-  float dimDot = rnd2 > 0.965 ? 1.0 : 0.0;      // ~3.5% of cells are dim/dead
-  float bright = (0.82 + rnd2 * 0.26) * (1.0 - dimDot * 0.72);
+  float sizeVar = 0.84 + rnd * 0.05;            // dot radius threshold ~0.84..0.89 (fuller dots)
+  float bright = 0.94 + rnd2 * 0.10;            // ~0.94..1.04, gentle
 
   // --- dot geometry: a disc that squashes vertically while flipping ---
   float squash = mix(1.0, 0.12, flip);          // edge-on at the flip instant
