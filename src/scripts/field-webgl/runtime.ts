@@ -15,16 +15,14 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean): Fi
   // ?reveal=full freezes the fully-revealed mark (design/debug aid).
   const frozen = reduced || new URLSearchParams(location.search).get('reveal') === 'full';
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance', preserveDrawingBuffer: true });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
   renderer.setClearColor(0x06080b, 1);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   const scene = new THREE.Scene();
   const camera = new THREE.Camera();
 
-  let texReady = false;
   const logoTex = new THREE.TextureLoader().load('/assets/brand/kodaxa-mark.png', () => {
-    texReady = true;
     if (frozen) renderer.render(scene, camera); // re-render the still once loaded
   });
   logoTex.colorSpace = THREE.SRGBColorSpace;
@@ -85,7 +83,6 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean): Fi
   };
 
   resize();
-  (window as any).__field = { uniforms, get texReady() { return texReady; }, logoTex }; // debug
   window.addEventListener('resize', resize, { passive: true });
   if (frozen) {
     renderer.render(scene, camera); // single resolved frame, no loop
