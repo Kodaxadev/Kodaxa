@@ -86,17 +86,63 @@ vec4 glyphFrontierWardenColor(vec2 p){
   return o;
 }
 
+// ---------- Signal Vault: live spectrum analyzer ----------
+// Field intelligence = a live signal. A row of frequency bars rises and falls
+// (layered sines per bar) with a bright travelling cap; a faint baseline grid
+// grounds it. Colour shifts cool→hot with amplitude.
+vec4 glyphSignalVaultColor(vec2 p){
+  vec4 o = vec4(0.0);
+  float t = uTime;
+
+  const int N = 13;              // number of bars
+  float spanX = 0.86;           // total width
+  float bw = spanX / float(N);  // bar pitch
+  float halfBar = bw * 0.30;    // bar half-width (gap between bars)
+  float baseY = -0.30;          // floor
+  float maxH = 0.62;            // max bar height
+
+  // Baseline grid line.
+  put(o, stroke(p.y - baseY, 0.006) * 0.25 * step(abs(p.x), spanX*0.5), vec3(0.35,0.46,0.58));
+
+  for(int i = 0; i < N; i++){
+    float fi = float(i);
+    float cx = -spanX*0.5 + bw*(fi + 0.5);
+    // Per-bar amplitude from layered sines (pseudo spectrum).
+    float a = 0.5
+      + 0.30 * sin(t * (1.4 + fi*0.20) + fi*1.7)
+      + 0.18 * sin(t * (2.7 - fi*0.11) + fi*0.6);
+    a = clamp(a, 0.05, 1.0);
+    float h = a * maxH;
+    float topY = baseY + h;
+
+    // Within this bar's column?
+    float inCol = step(abs(p.x - cx), halfBar);
+    // Filled column from base to top.
+    float fill = inCol * step(baseY, p.y) * step(p.y, topY);
+    // Colour: cool at the base → hot at the peak.
+    vec3 lowC = vec3(0.22, 0.55, 0.85);
+    vec3 hiC  = vec3(1.0, 0.45, 0.30);
+    vec3 barC = mix(lowC, hiC, clamp((p.y - baseY)/maxH + a*0.25, 0.0, 1.0));
+    put(o, fill * 0.85, barC);
+    // Bright cap dot riding the top.
+    put(o, inCol * (1.0 - smoothstep(0.0, halfBar*1.2, abs(p.y - topY))), mix(hiC, vec3(1.0,0.9,0.6), a));
+  }
+
+  return o;
+}
+
 // vec2 fallback (coverage, accent) — kept for non-coloured glyphs later.
 vec2 glyphMask(int id, vec2 p){ return vec2(0.0); }
 
 // Colour-aware dispatch: returns vec4(rgb, lit). id 0 = none.
 vec4 glyphColor(int id, vec2 p){
   if(id == 1) return glyphFrontierWardenColor(p);
+  if(id == 3) return glyphSignalVaultColor(p);
   return vec4(0.0);
 }
 
 // Does this glyph supply its own colour (use glyphColor, not the slate base)?
-bool glyphColored(int id){ return id == 1; }
+bool glyphColored(int id){ return id == 1 || id == 3; }
 // Is this glyph an animated scene (shown continuously, no reveal sweep)?
-bool glyphAnimated(int id){ return id == 1; }
+bool glyphAnimated(int id){ return id == 1 || id == 3; }
 `;
