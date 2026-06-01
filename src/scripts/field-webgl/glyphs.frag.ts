@@ -28,46 +28,54 @@ float stroke(float d, float t){ return 1.0 - smoothstep(t, t + 0.014, abs(d)); }
 // fill an SDF (inside) into a 0..1 mask
 float solid(float d){ return 1.0 - smoothstep(0.0, 0.014, d); }
 
-// ---------- FrontierWarden: evidence gate ----------
-// The project EVALUATES and EXPOSES evidence; operators retain control. So the
-// mark is an open hexagonal GATE (capability object) with EVIDENCE nodes
-// feeding in from the left, one bright VERIFIED PATH through it (the focal
-// accent), and a separated tenant POLICY KEY at the lower right — not a shield
-// or lock (those imply centralized pass/fail authority).
+// ---------- FrontierWarden: living solar system + comets ----------
+// FrontierWarden is the trust/credit core of an ecosystem: tools orbit it
+// (planets) while intel/evidence streaks in as comets. Animated continuously
+// via uTime (the dotboard shows this glyph without the reveal sweep).
+// Returns vec2(coverage, accent): accent = bright bodies (sun core, comet
+// heads) that pulse; coverage = dimmer bodies, orbits, comet tails.
 vec2 glyphFrontierWarden(vec2 p){
   float cov = 0.0;
   float acc = 0.0;
+  float t = uTime;
 
-  // Center: large open hexagon gate (flat-top), bold outline. Shifted slightly
-  // right to leave room for the evidence feed on the left.
-  vec2 hp = p - vec2(0.05, 0.02);
-  float hex = sdHexagon(hp.yx, 0.30);         // .yx → flat-top gate aperture
-  cov = max(cov, stroke(hex, 0.016));
+  // Sun: pulsing core + dim corona at centre.
+  float sunR = 0.05 + 0.006 * sin(t * 1.5);
+  acc = max(acc, solid(sdCircle(p, sunR)));
+  cov = max(cov, solid(sdCircle(p, sunR * 1.7)) * 0.55);
 
-  // Left: three evidence nodes + connectors feeding toward the gate's left face.
-  vec2 ev[3];
-  ev[0] = vec2(-0.46, 0.13);
-  ev[1] = vec2(-0.46, 0.00);
-  ev[2] = vec2(-0.46, -0.13);
-  for(int i = 0; i < 3; i++){
-    cov = max(cov, solid(sdCircle(p - ev[i], 0.025)));
-    cov = max(cov, stroke(sdSegment(p, ev[i] + vec2(0.03, 0.0), vec2(-0.22, ev[i].y * 0.4)), 0.008));
+  // Faint dotted orbit rings.
+  cov = max(cov, stroke(sdCircle(p, 0.17), 0.006) * 0.30);
+  cov = max(cov, stroke(sdCircle(p, 0.27), 0.006) * 0.26);
+  cov = max(cov, stroke(sdCircle(p, 0.38), 0.006) * 0.22);
+
+  // Planets orbiting (different radii, speeds, phases).
+  float a1 = t * 0.55;
+  cov = max(cov, solid(sdCircle(p - vec2(cos(a1), sin(a1)) * 0.17, 0.020)));
+  float a2 = t * 0.34 + 2.1;
+  vec2 pc2 = vec2(cos(a2), sin(a2)) * 0.27;
+  cov = max(cov, solid(sdCircle(p - pc2, 0.024)));
+  // a moon on planet 2
+  cov = max(cov, solid(sdCircle(p - pc2 - vec2(cos(t * 2.2), sin(t * 2.2)) * 0.055, 0.010)));
+  float a3 = t * 0.22 + 4.0;
+  cov = max(cov, solid(sdCircle(p - vec2(cos(a3), sin(a3)) * 0.38, 0.018)));
+
+  // Comets streaking across the field (bright head = accent, fading tail = cov).
+  for(int i = 0; i < 2; i++){
+    float fi = float(i);
+    float ct = fract(t * (0.075 + fi * 0.02) + fi * 0.55);
+    vec2 a = vec2(-1.3, 0.46 - fi * 0.55);
+    vec2 b = vec2(1.3, -0.34 + fi * 0.42);
+    vec2 head = mix(a, b, ct);
+    vec2 dir = normalize(b - a);
+    vec2 rel = p - head;
+    float along = dot(rel, -dir);                       // distance behind head
+    float perp = dot(rel, vec2(-dir.y, dir.x));
+    float tail = step(0.0, along) * (1.0 - smoothstep(0.0, 0.45, along));
+    tail *= 1.0 - smoothstep(0.0, 0.016 + along * 0.03, abs(perp));
+    cov = max(cov, tail * 0.85);
+    acc = max(acc, solid(sdCircle(rel, 0.017)));        // bright comet head
   }
-
-  // Inside: one bright verified path THROUGH the gate (enters left, exits right
-  // to a verified terminus just outside the far face). The focal accent.
-  float pth = min(
-    sdSegment(p, vec2(-0.20, 0.0), vec2(0.05, 0.06)),
-    sdSegment(p, vec2(0.05, 0.06), vec2(0.33, -0.04))
-  );
-  acc = max(acc, stroke(pth, 0.016));
-  acc = max(acc, solid(sdCircle(p - vec2(0.34, -0.05), 0.030)));  // verified terminus
-
-  // Lower right: separated tenant policy key — a small ring + stem held apart
-  // from the gate, signalling operator-owned control (not central authority).
-  cov = max(cov, stroke(sdCircle(p - vec2(0.20, -0.34), 0.045), 0.011));   // key bow (ring)
-  cov = max(cov, stroke(sdSegment(p, vec2(0.245, -0.34), vec2(0.40, -0.34)), 0.011)); // shaft
-  cov = max(cov, stroke(sdSegment(p, vec2(0.38, -0.34), vec2(0.38, -0.27)), 0.011));  // bit
 
   return vec2(clamp(cov, 0.0, 1.0), clamp(acc, 0.0, 1.0));
 }
@@ -77,4 +85,7 @@ vec2 glyphMask(int id, vec2 p){
   if(id == 1) return glyphFrontierWarden(p);
   return vec2(0.0);
 }
+
+// Is this glyph an animated scene (shown continuously, no reveal sweep)?
+bool glyphAnimated(int id){ return id == 1; }
 `;

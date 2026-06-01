@@ -97,7 +97,11 @@ void main(){
   // stays on through the hold (it no longer dims the instant the front passes),
   // so the resolved wolf reads as a brand anchor rather than a scan demo.
   float on, flip;
-  if(uReduced > 0.5){
+  if(uGlyph > 0 && glyphAnimated(uGlyph)){
+    // Animated scene glyphs (e.g. solar system) play continuously — no reveal
+    // sweep; the motion lives inside the glyph via uTime.
+    on = coverage; flip = 0.0;
+  } else if(uReduced > 0.5){
     on = coverage; flip = 0.0;
   } else {
     const float SWEEP_DUR = 4.0;   // front travels across (s)
