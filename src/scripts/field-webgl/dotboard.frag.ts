@@ -53,7 +53,15 @@ void main(){
   float coverage;
   vec3 wolfCol;
 
-  if(uGlyph > 0){
+  if(uGlyph > 0 && glyphColored(uGlyph)){
+    // --- colour-aware procedural glyph (e.g. solar system): each body its
+    // own colour. glyphColor returns vec4(rgb, lit). ---
+    vec2 gp = vec2((tileCenter.x - 0.5) * aspect, tileCenter.y - 0.5);
+    vec4 g = glyphColor(uGlyph, gp);
+    coverage = g.a;
+    wolfCol = g.rgb;
+    wolfCol = floor(wolfCol * 16.0 + 0.5) / 16.0;
+  } else if(uGlyph > 0){
     // --- procedural project glyph: schematic cool-toned mask ---
     vec2 gp = vec2((tileCenter.x - 0.5) * aspect, tileCenter.y - 0.5);
     vec2 g = glyphMask(uGlyph, gp);

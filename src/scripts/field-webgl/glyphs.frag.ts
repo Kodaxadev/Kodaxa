@@ -28,64 +28,75 @@ float stroke(float d, float t){ return 1.0 - smoothstep(t, t + 0.014, abs(d)); }
 // fill an SDF (inside) into a 0..1 mask
 float solid(float d){ return 1.0 - smoothstep(0.0, 0.014, d); }
 
+// Composite a coloured body into an accumulating (rgb, lit) result, keeping the
+// brightest contributor per dot (max over lit so nearer/brighter bodies win).
+void put(inout vec4 dst, float m, vec3 col){
+  if(m > dst.a){ dst = vec4(col, m); }
+}
+
 // ---------- FrontierWarden: living solar system + comets ----------
 // FrontierWarden is the trust/credit core of an ecosystem: tools orbit it
-// (planets) while intel/evidence streaks in as comets. Animated continuously
-// via uTime (the dotboard shows this glyph without the reveal sweep).
-// Returns vec2(coverage, accent): accent = bright bodies (sun core, comet
-// heads) that pulse; coverage = dimmer bodies, orbits, comet tails.
-vec2 glyphFrontierWarden(vec2 p){
-  float cov = 0.0;
-  float acc = 0.0;
+// (planets) while intel/evidence streaks in as comets. Colour-aware: returns
+// vec4(rgb, lit). Animated continuously via uTime.
+vec4 glyphFrontierWardenColor(vec2 p){
+  vec4 o = vec4(0.0);
   float t = uTime;
 
-  // Sun: pulsing core + dim corona at centre.
-  float sunR = 0.05 + 0.006 * sin(t * 1.5);
-  acc = max(acc, solid(sdCircle(p, sunR)));
-  cov = max(cov, solid(sdCircle(p, sunR * 1.7)) * 0.55);
+  // Faint dotted orbit rings (cool slate).
+  put(o, stroke(sdCircle(p, 0.17), 0.006) * 0.30, vec3(0.40, 0.52, 0.66));
+  put(o, stroke(sdCircle(p, 0.27), 0.006) * 0.26, vec3(0.40, 0.52, 0.66));
+  put(o, stroke(sdCircle(p, 0.38), 0.006) * 0.22, vec3(0.40, 0.52, 0.66));
 
-  // Faint dotted orbit rings.
-  cov = max(cov, stroke(sdCircle(p, 0.17), 0.006) * 0.30);
-  cov = max(cov, stroke(sdCircle(p, 0.27), 0.006) * 0.26);
-  cov = max(cov, stroke(sdCircle(p, 0.38), 0.006) * 0.22);
+  // Burnt-red sun: dim ember corona + hot core, gently pulsing.
+  float sunR = 0.052 + 0.006 * sin(t * 1.5);
+  put(o, solid(sdCircle(p, sunR * 1.8)) * 0.55, vec3(0.55, 0.12, 0.05));   // corona
+  put(o, solid(sdCircle(p, sunR)), vec3(1.05, 0.30, 0.12));                // burnt-red core
 
-  // Planets orbiting (different radii, speeds, phases).
+  // Planets — bolder, each its own colour.
   float a1 = t * 0.55;
-  cov = max(cov, solid(sdCircle(p - vec2(cos(a1), sin(a1)) * 0.17, 0.020)));
+  put(o, solid(sdCircle(p - vec2(cos(a1), sin(a1)) * 0.17, 0.028)), vec3(0.30, 0.80, 0.95)); // cyan
   float a2 = t * 0.34 + 2.1;
   vec2 pc2 = vec2(cos(a2), sin(a2)) * 0.27;
-  cov = max(cov, solid(sdCircle(p - pc2, 0.024)));
-  // a moon on planet 2
-  cov = max(cov, solid(sdCircle(p - pc2 - vec2(cos(t * 2.2), sin(t * 2.2)) * 0.055, 0.010)));
+  put(o, solid(sdCircle(p - pc2, 0.034)), vec3(0.95, 0.62, 0.20));         // amber
+  put(o, solid(sdCircle(p - pc2 - vec2(cos(t*2.2), sin(t*2.2)) * 0.06, 0.013)), vec3(0.80, 0.84, 0.92)); // moon
   float a3 = t * 0.22 + 4.0;
-  cov = max(cov, solid(sdCircle(p - vec2(cos(a3), sin(a3)) * 0.38, 0.018)));
+  put(o, solid(sdCircle(p - vec2(cos(a3), sin(a3)) * 0.38, 0.026)), vec3(0.62, 0.45, 0.95)); // violet
 
-  // Comets streaking across the field (bright head = accent, fading tail = cov).
-  for(int i = 0; i < 2; i++){
+  // Comets — three, each a distinct colour, bright head + fading tail.
+  vec3 cc[3];
+  cc[0] = vec3(0.45, 0.85, 1.0);    // ice blue
+  cc[1] = vec3(0.55, 1.0, 0.65);    // green
+  cc[2] = vec3(1.0, 0.55, 0.85);    // magenta
+  for(int i = 0; i < 3; i++){
     float fi = float(i);
-    float ct = fract(t * (0.075 + fi * 0.02) + fi * 0.55);
-    vec2 a = vec2(-1.3, 0.46 - fi * 0.55);
-    vec2 b = vec2(1.3, -0.34 + fi * 0.42);
+    float ct = fract(t * (0.075 + fi * 0.018) + fi * 0.37);
+    vec2 a = vec2(-1.3, 0.5 - fi * 0.42);
+    vec2 b = vec2(1.3, -0.4 + fi * 0.36);
     vec2 head = mix(a, b, ct);
     vec2 dir = normalize(b - a);
     vec2 rel = p - head;
-    float along = dot(rel, -dir);                       // distance behind head
+    float along = dot(rel, -dir);
     float perp = dot(rel, vec2(-dir.y, dir.x));
-    float tail = step(0.0, along) * (1.0 - smoothstep(0.0, 0.45, along));
+    float tail = step(0.0, along) * (1.0 - smoothstep(0.0, 0.5, along));
     tail *= 1.0 - smoothstep(0.0, 0.016 + along * 0.03, abs(perp));
-    cov = max(cov, tail * 0.85);
-    acc = max(acc, solid(sdCircle(rel, 0.017)));        // bright comet head
+    put(o, tail * 0.8, cc[i] * 0.85);
+    put(o, solid(sdCircle(rel, 0.018)), cc[i] + 0.15);    // bright head
   }
 
-  return vec2(clamp(cov, 0.0, 1.0), clamp(acc, 0.0, 1.0));
+  return o;
 }
 
-// Dispatch: id → glyph. Returns vec2(coverage, accent). id 0 = none.
-vec2 glyphMask(int id, vec2 p){
-  if(id == 1) return glyphFrontierWarden(p);
-  return vec2(0.0);
+// vec2 fallback (coverage, accent) — kept for non-coloured glyphs later.
+vec2 glyphMask(int id, vec2 p){ return vec2(0.0); }
+
+// Colour-aware dispatch: returns vec4(rgb, lit). id 0 = none.
+vec4 glyphColor(int id, vec2 p){
+  if(id == 1) return glyphFrontierWardenColor(p);
+  return vec4(0.0);
 }
 
+// Does this glyph supply its own colour (use glyphColor, not the slate base)?
+bool glyphColored(int id){ return id == 1; }
 // Is this glyph an animated scene (shown continuously, no reveal sweep)?
 bool glyphAnimated(int id){ return id == 1; }
 `;
