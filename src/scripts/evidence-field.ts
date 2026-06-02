@@ -19,6 +19,7 @@ const hasWebgl = () => {
 if (canvas) {
   const ambient = canvas.dataset.variant === 'ambient';
   const glyph = glyphId(canvas.dataset.glyph);
+  const wordmark = canvas.dataset.wordmark === '1';
   let handle: { destroy: () => void } | null = null;
   let disposed = false;
 
@@ -33,7 +34,7 @@ if (canvas) {
       import('./field-webgl/runtime')
         .then((m) => {
           if (disposed) return;
-          handle = m.startWebglField(canvas, ambient, glyph);
+          handle = m.startWebglField(canvas, ambient, glyph, wordmark);
         })
         .catch(startFallback);
     if ('requestIdleCallback' in window) {

@@ -1,9 +1,9 @@
 ---
-interface Props { ambient?: boolean; glyph?: string }
-const { ambient = false, glyph } = Astro.props;
+interface Props { ambient?: boolean; glyph?: string; wordmark?: boolean }
+const { ambient = false, glyph, wordmark = false } = Astro.props;
 ---
 <div class:list={['evidence-field', ambient && 'evidence-field--ambient']} aria-hidden="true">
-  <canvas id="evidence-canvas" data-variant={ambient ? 'ambient' : 'hero'} data-glyph={glyph}></canvas>
+  <canvas id="evidence-canvas" data-variant={ambient ? 'ambient' : 'hero'} data-glyph={glyph} data-wordmark={wordmark ? '1' : undefined}></canvas>
   {!ambient && (
     <div class="signal-readout" role="presentation">
       <p class="signal-readout__head"><span class="signal-readout__dot"></span>SIGNAL — resolving</p>

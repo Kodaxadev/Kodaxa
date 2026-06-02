@@ -21,6 +21,7 @@ uniform float     uReduced;     // 1.0 = freeze fully-revealed mark
 uniform sampler2D uLogo;        // wolf mark (RGBA, alpha = coverage)
 uniform vec4      uLogoRect;    // x, y, w, h in uv space
 uniform int       uGlyph;       // 0 = wolf texture; >0 = procedural project glyph
+uniform int       uReveal;      // 0 = rotate reveal style each cycle; >0 = fixed style
 
 float aspect;
 
@@ -118,24 +119,43 @@ void main(){
     const float PAUSE_DUR = 1.8;   // dark gap before restart (s)
     const float TOTAL = SWEEP_DUR + HOLD_DUR + DECAY_DUR + PAUSE_DUR;
 
+    float cycle = floor(uTime / TOTAL);
     float t = mod(uTime, TOTAL);
     float waver = (hash21(vec2(floor(tileCenter.y * 36.0), 3.0)) - 0.5) * 0.02;
-    float litX = tileCenter.x + waver;          // when (0..1) this column's front arrives
-    float flipW = 0.05;
 
-    // Reveal: front position 0→1 over SWEEP_DUR; tile turns on as it passes.
+    // litT in 0..1 = WHEN this tile lights. The ordering function rotates each
+    // cycle so the board reveals with a different style every time (the wordmark
+    // wants this; the wolf benefits too). uReveal!=0 forces a fixed style.
+    int style = (uReveal > 0) ? uReveal : int(mod(cycle, 6.0));
+    vec2 c = tileCenter - 0.5;            // centred (-0.5..0.5), x already *aspect upstream? no
+    float litT;
+    if(style == 0){            // left → right
+      litT = tileCenter.x;
+    } else if(style == 1){     // top → down
+      litT = 1.0 - tileCenter.y;
+    } else if(style == 2){     // radial out from centre
+      litT = clamp(length(vec2(c.x * aspect, c.y)) / 0.75, 0.0, 1.0);
+    } else if(style == 3){     // diagonal ↘
+      litT = (tileCenter.x + (1.0 - tileCenter.y)) * 0.5;
+    } else if(style == 4){     // random dissolve
+      litT = hash21(tileId + 4.2);
+    } else {                   // bottom → up
+      litT = tileCenter.y;
+    }
+    litT = clamp(litT + waver, 0.0, 1.0);
+    float flipW = 0.06;
+
     float head = (t / SWEEP_DUR);
-    float reveal = smoothstep(litX - flipW, litX + flipW, head);
+    float reveal = smoothstep(litT - flipW, litT + flipW, head);
 
-    // Decay: during the decay window all tiles fade, slightly staggered.
     float decayT = clamp((t - (SWEEP_DUR + HOLD_DUR)) / DECAY_DUR, 0.0, 1.0);
     float fade = 1.0 - smoothstep(0.0, 1.0, decayT + waver * 4.0);
 
     on = (t < SWEEP_DUR + HOLD_DUR) ? reveal : (t < SWEEP_DUR + HOLD_DUR + DECAY_DUR ? fade : 0.0);
     on = clamp(on, 0.0, 1.0) * coverage;
 
-    // Flip pop only at the advancing front during the sweep.
-    flip = (t < SWEEP_DUR) ? (1.0 - smoothstep(0.0, flipW, abs(head - litX))) * coverage : 0.0;
+    // Flip pop at the advancing front during the sweep.
+    flip = (t < SWEEP_DUR) ? (1.0 - smoothstep(0.0, flipW, abs(head - litT))) * coverage : 0.0;
   }
 
   // --- subtle per-dot variance (stable per tile): a whisper of size and
