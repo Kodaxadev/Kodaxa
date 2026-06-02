@@ -23,6 +23,7 @@ uniform vec4      uLogoRect;    // x, y, w, h in uv space
 uniform int       uGlyph;       // 0 = wolf texture; >0 = procedural project glyph
 uniform int       uReveal;      // 0 = rotate reveal style each cycle; >0 = fixed style
 uniform int       uWordmark;    // 1 = uLogo is the KODAXA wordmark (palette treatment)
+uniform sampler2D uCode;        // Code-Warden: scrolling code-diff strip (glyph 5)
 
 float aspect;
 
@@ -109,6 +110,27 @@ void main(){
     wc = mix(wc, cyan, cyanBand * (0.45 + 0.2 * pulse));
 
     wolfCol = floor(wc * 16.0 + 0.5) / 16.0;
+  } else if(uGlyph == 5){
+    // --- Code-Warden: scrolling REAL code diff sampled from uCode ---
+    // Map the tile into a centred code panel; scroll V over time. The texture
+    // already carries diff tints + gutter marks + coloured text.
+    float panelW = 0.92, panelH = 0.66;          // fraction of the field
+    vec2 q = (tileCenter - 0.5) / vec2(panelW, panelH) + 0.5;   // 0..1 in panel
+    if(q.x < 0.0 || q.x > 1.0 || q.y < 0.0 || q.y > 1.0){
+      coverage = 0.0; wolfCol = vec3(0.0);
+    } else {
+      // scroll upward; wrapT=repeat makes it seamless
+      vec2 cuv = vec2(q.x, fract(q.y + uTime * 0.045));
+      vec4 cs = texture2D(uCode, cuv);
+      vec3 cc = cs.rgb;
+      float lit = max(max(cc.r, cc.g), cc.b);    // text/marks brightness
+      coverage = smoothstep(0.18, 0.5, lit);
+      // scan-review highlight: a soft horizontal bar sweeping down the panel
+      float scanY = fract(uTime * 0.08);
+      float scan = smoothstep(0.06, 0.0, abs(q.y - scanY));
+      wolfCol = cc * (1.0 + scan * 0.8) + vec3(0.10, 0.30, 0.45) * scan * coverage;
+      wolfCol = floor(wolfCol * 16.0 + 0.5) / 16.0;
+    }
   } else if(uGlyph > 0 && glyphColored(uGlyph)){
     // --- colour-aware procedural glyph (e.g. solar system): each body its
     // own colour. glyphColor returns vec4(rgb, lit). ---
