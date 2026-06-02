@@ -146,6 +146,59 @@ vec4 glyphSignalVaultColor(vec2 p){
   return o;
 }
 
+// ---------- Code-Warden: live code diff ----------
+// Governance/verification for AI coding agents → a scrolling code review. Rows
+// of tokenised "code" (indented dot-segments) scroll upward; the gutter marks
+// each line and diff-coloured lines flash green (added) / red (removed) as the
+// warden reviews, most lines neutral slate.
+vec4 glyphCodeWardenColor(vec2 p){
+  vec4 o = vec4(0.0);
+  float t = uTime;
+
+  float left = -0.42, right = 0.42;     // code panel x-extent
+  float rowH = 0.072;                    // line height
+  float scroll = t * 0.9;               // lines scrolled
+
+  // Which line index is at this y (scrolling upward → subtract).
+  float lineF = (0.34 - p.y) / rowH + scroll;
+  float line = floor(lineF);
+  float rowY = fract(lineF);             // 0..1 within the row
+  if(p.x < left - 0.03 || p.x > right) return o;
+  // vertical centring band of the row (a dot-tall strip)
+  float onRow = 1.0 - smoothstep(0.34, 0.66, abs(rowY - 0.5) * 2.0);
+  if(onRow < 0.05) return o;
+
+  // Per-line pseudo-random traits.
+  float r1 = hash21(vec2(line, 1.0));
+  float r2 = hash21(vec2(line, 2.0));
+  float r3 = hash21(vec2(line, 3.0));
+  float indent = left + 0.03 + floor(r1 * 4.0) * 0.05;   // indent depth
+  float lineEnd = indent + 0.12 + r2 * (right - indent - 0.04);
+
+  // Diff state: ~16% added, ~12% removed, rest neutral.
+  float ds = hash21(vec2(line, 9.0));
+  vec3 neutral = vec3(0.46, 0.56, 0.70);
+  vec3 added   = vec3(0.30, 0.92, 0.50);
+  vec3 removed = vec3(1.0, 0.40, 0.34);
+  vec3 codeCol = ds > 0.84 ? added : (ds > 0.72 ? removed : neutral);
+
+  // Gutter: a small mark per line (+ / − / dot).
+  float inGutter = step(left - 0.02, p.x) * step(p.x, left + 0.005);
+  put(o, inGutter * onRow, codeCol * 0.7);
+
+  // Tokenised code: break the line into 2-4 segments with gaps → looks like
+  // words/tokens. A segment exists where a low-freq pattern says so.
+  float xN = (p.x - indent) / max(lineEnd - indent, 0.001);   // 0..1 along line
+  if(p.x >= indent && p.x <= lineEnd){
+    float tok = step(0.32, fract(p.x * 26.0 + floor(r3 * 5.0)));  // token vs gap
+    // brighter near the "cursor" line being actively reviewed
+    float focus = smoothstep(2.0, 0.0, abs(line - (scroll + 4.0)));
+    put(o, tok * onRow * (0.7 + 0.3*focus), codeCol * (0.8 + 0.4*focus));
+  }
+
+  return o;
+}
+
 // vec2 fallback (coverage, accent) — kept for non-coloured glyphs later.
 vec2 glyphMask(int id, vec2 p){ return vec2(0.0); }
 
@@ -153,11 +206,12 @@ vec2 glyphMask(int id, vec2 p){ return vec2(0.0); }
 vec4 glyphColor(int id, vec2 p){
   if(id == 1) return glyphFrontierWardenColor(p);
   if(id == 3) return glyphSignalVaultColor(p);
+  if(id == 5) return glyphCodeWardenColor(p);
   return vec4(0.0);
 }
 
 // Does this glyph supply its own colour (use glyphColor, not the slate base)?
-bool glyphColored(int id){ return id == 1 || id == 3; }
+bool glyphColored(int id){ return id == 1 || id == 3 || id == 5; }
 // Is this glyph an animated scene (shown continuously, no reveal sweep)?
-bool glyphAnimated(int id){ return id == 1 || id == 3; }
+bool glyphAnimated(int id){ return id == 1 || id == 3 || id == 5; }
 `;
