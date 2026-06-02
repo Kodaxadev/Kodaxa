@@ -302,7 +302,7 @@ vec4 glyphAtlasColor(vec2 p){
   vec2 wc = vec2(0.0, -0.26);              // word centre, under the globe
   vec2 luv = (p - wc) / (wRect * 2.0) + 0.5;
   if(luv.x > 0.0 && luv.x < 1.0 && luv.y > 0.0 && luv.y < 1.0){
-    float wa = texture2D(uAtlasWord, vec2(1.0 - luv.x, 1.0 - luv.y)).a;
+    float wa = texture2D(uAtlasWord, vec2(luv.x, luv.y)).a;
     put(o, smoothstep(0.35, 0.6, wa), cyan);
   }
 
