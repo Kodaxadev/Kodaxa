@@ -295,32 +295,40 @@ vec4 glyphAtlasColor(vec2 p){
     put(o, smoothstep(0.02, 0.0, abs(d - R)) * 0.6, cyan);
   }
 
-  // ----- Atlas: a BOLD FILLED silhouette kneeling under the globe -----
-  // Built from thick capsules (wide stroke = filled limb) + circles so it reads
-  // as a solid figure at dot resolution, like the reference's flat-blue Atlas.
-  // capsule(a,b,th) = solid rounded bar; circle = solid joint/mass.
-  float body = 0.0;
-  // Raised arms cradling the globe (hands meet the sphere's lower sides).
-  body = max(body, 1.0 - smoothstep(0.052,0.066, sdSegment(p, vec2(-0.085,-0.05), vec2(-0.20, 0.06)))); // L upper arm
-  body = max(body, 1.0 - smoothstep(0.052,0.066, sdSegment(p, vec2( 0.085,-0.05), vec2( 0.20, 0.06)))); // R upper arm
-  body = max(body, solid(sdCircle(p - vec2(-0.20,0.07), 0.05)));   // L hand mass
-  body = max(body, solid(sdCircle(p - vec2( 0.20,0.07), 0.05)));   // R hand mass
-  // Shoulders + head.
-  body = max(body, 1.0 - smoothstep(0.075,0.090, sdSegment(p, vec2(-0.085,-0.05), vec2(0.085,-0.05)))); // shoulders
-  body = max(body, solid(sdCircle(p - vec2(0.0,-0.04), 0.058)));   // head/upper torso mass
-  // Torso tapering to the hips.
-  body = max(body, 1.0 - smoothstep(0.085,0.10, sdSegment(p, vec2(0.0,-0.06), vec2(-0.02,-0.26))));     // torso
-  body = max(body, solid(sdCircle(p - vec2(-0.02,-0.26), 0.075)));  // hips mass
-  // Front leg: thigh forward-down to a bent knee, then shin to the ground.
-  body = max(body, 1.0 - smoothstep(0.060,0.075, sdSegment(p, vec2(-0.02,-0.26), vec2(-0.22,-0.40))));  // front thigh
-  body = max(body, 1.0 - smoothstep(0.055,0.070, sdSegment(p, vec2(-0.22,-0.40), vec2(-0.14,-0.50))));  // front shin
-  // Back leg: thigh back-down, shin planted (the lunge).
-  body = max(body, 1.0 - smoothstep(0.060,0.075, sdSegment(p, vec2(-0.02,-0.26), vec2(0.20,-0.36))));   // back thigh
-  body = max(body, 1.0 - smoothstep(0.055,0.070, sdSegment(p, vec2(0.20,-0.36), vec2(0.30,-0.50))));    // back shin
-  put(o, body, fig);
+  // ----- Atlas figure: a DARK silhouette with a 1-dot blue outline -----
+  // Built as a signed-distance field (min of capsules/circles). The interior
+  // is rendered with dark "off" dots (cutting the body out of the board) and a
+  // thin band at the edge gets a blue rim so the silhouette reads. Shifted DOWN
+  // so head/arms/shoulders sit clearly UNDER the globe, not mashed into it.
+  float yo = -0.14;   // vertical offset: drop the whole figure below the globe
+  #define CAP(a,b,th) (min(bd, sdSegment(p, (a)+vec2(0.0,yo), (b)+vec2(0.0,yo)) - (th)))
+  float bd = 1e3;
+  bd = CAP(vec2(-0.085,-0.05), vec2(-0.19, 0.03), 0.050);  // L upper arm
+  bd = CAP(vec2( 0.085,-0.05), vec2( 0.19, 0.03), 0.050);  // R upper arm
+  bd = min(bd, sdCircle(p - vec2(-0.19, 0.04+yo), 0.052)); // L hand
+  bd = min(bd, sdCircle(p - vec2( 0.19, 0.04+yo), 0.052)); // R hand
+  bd = CAP(vec2(-0.085,-0.05), vec2(0.085,-0.05), 0.060);  // shoulders
+  bd = min(bd, sdCircle(p - vec2(0.0,-0.05+yo), 0.062));   // head/neck mass
+  bd = CAP(vec2(0.0,-0.07), vec2(-0.02,-0.27), 0.085);     // torso
+  bd = min(bd, sdCircle(p - vec2(-0.02,-0.27+yo), 0.078)); // hips
+  bd = CAP(vec2(-0.02,-0.27), vec2(-0.22,-0.40), 0.062);   // front thigh
+  bd = CAP(vec2(-0.22,-0.40), vec2(-0.14,-0.50), 0.055);   // front shin
+  bd = CAP(vec2(-0.02,-0.27), vec2(0.20,-0.36), 0.062);    // back thigh
+  bd = CAP(vec2(0.20,-0.36), vec2(0.30,-0.50), 0.055);     // back shin
+
+  float inside = 1.0 - smoothstep(-0.012, 0.012, bd);      // body interior
+  float rim = 1.0 - smoothstep(0.0, 0.026, abs(bd));       // outline band (~2 dots)
+  // Body interior: dark dots (silhouette cut out of the board), so the figure
+  // reads as a solid dark mass beneath the world.
+  o.rgb = mix(o.rgb, vec3(0.018, 0.022, 0.034), inside);
+  o.a   = max(o.a, inside);
+  // Bright blue outline tracing the whole silhouette so it clearly reads.
+  vec3 rimC = vec3(0.32, 0.66, 1.05);
+  o.rgb = mix(o.rgb, rimC, rim);
+  o.a   = max(o.a, rim);
 
   // ground line
-  put(o, stroke(p.y + 0.50, 0.012) * step(abs(p.x), 0.36) * 0.5, fig);
+  put(o, stroke(p.y + 0.52, 0.012) * step(abs(p.x), 0.36) * 0.45, fig);
 
   return o;
 }
