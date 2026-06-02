@@ -253,6 +253,67 @@ vec4 glyphStepColor(vec2 p){
   return o;
 }
 
+// ---------- EF-Atlas: tiered knowledge map ----------
+// Authority-tiered knowledge corpus → a map of source nodes in concentric
+// tiers: a bright authoritative core (official truth), an inner ring (specs /
+// tooling), an outer ring (community references, dimmer). Provenance links run
+// core→nodes, and a query pulse expands outward periodically, lighting each
+// tier in sequence as the corpus is searched.
+vec4 glyphAtlasColor(vec2 p){
+  vec4 o = vec4(0.0);
+  float t = uTime;
+  float rr = length(p);
+
+  // Tier palette: official gold core → cyan specs → slate community.
+  vec3 gold  = vec3(1.0, 0.78, 0.32);
+  vec3 cyan  = vec3(0.35, 0.80, 0.98);
+  vec3 slate = vec3(0.45, 0.55, 0.70);
+
+  // Query pulse: a ring expanding 0→0.5 radius, fading; lights nodes it crosses.
+  float qPhase = fract(t * 0.22);
+  float qR = qPhase * 0.52;
+  float qFade = 1.0 - qPhase;
+
+  // Faint tier orbit rings.
+  put(o, stroke(rr - 0.20, 0.006) * 0.22, cyan);
+  put(o, stroke(rr - 0.38, 0.006) * 0.18, slate);
+
+  // Authoritative core (gold), gently breathing.
+  float core = 0.05 + 0.006 * sin(t * 1.6);
+  put(o, solid(rr - core * 1.7) * 0.5, gold * 0.6);
+  put(o, solid(rr - core), gold);
+
+  // Inner tier: 6 spec/tooling nodes; Outer tier: 10 community nodes.
+  for(int i = 0; i < 16; i++){
+    float fi = float(i);
+    bool inner = i < 6;
+    float count = inner ? 6.0 : 10.0;
+    float idx = inner ? fi : fi - 6.0;
+    float ring = inner ? 0.20 : 0.38;
+    float spin = inner ? t * 0.10 : -t * 0.06;        // tiers rotate slowly
+    float ang = (idx / count) * 6.2831 + spin + (inner ? 0.0 : 0.3);
+    vec2 np = vec2(cos(ang), sin(ang)) * ring;
+
+    vec3 nodeC = inner ? cyan : slate;
+    float nodeR = inner ? 0.022 : 0.017;
+
+    // provenance link core→node (inner tier only, keeps it readable)
+    if(inner){
+      put(o, stroke(sdSegment(p, vec2(0.0), np), 0.006) * 0.28, cyan);
+    }
+
+    // node lights up brighter when the query pulse passes its radius
+    float hit = smoothstep(0.06, 0.0, abs(qR - ring)) * qFade;
+    put(o, solid(sdCircle(p - np, nodeR)) * (0.55 + hit * 0.8),
+        mix(nodeC, vec3(1.0), hit * 0.5));
+  }
+
+  // The expanding query ring itself.
+  put(o, stroke(rr - qR, 0.008) * qFade * 0.7, mix(gold, cyan, 0.4));
+
+  return o;
+}
+
 // vec2 fallback (coverage, accent) — kept for non-coloured glyphs later.
 vec2 glyphMask(int id, vec2 p){ return vec2(0.0); }
 
@@ -261,12 +322,13 @@ vec2 glyphMask(int id, vec2 p){ return vec2(0.0); }
 vec4 glyphColor(int id, vec2 p){
   if(id == 1) return glyphFrontierWardenColor(p);
   if(id == 3) return glyphSignalVaultColor(p);
+  if(id == 4) return glyphAtlasColor(p);
   if(id == 6) return glyphStepColor(p);
   return vec4(0.0);
 }
 
 // Does this glyph supply its own colour (use glyphColor, not the slate base)?
-bool glyphColored(int id){ return id == 1 || id == 3 || id == 6; }
+bool glyphColored(int id){ return id == 1 || id == 3 || id == 4 || id == 6; }
 // Is this glyph an animated scene (shown continuously, no reveal sweep)?
-bool glyphAnimated(int id){ return id == 1 || id == 3 || id == 5 || id == 6; }
+bool glyphAnimated(int id){ return id == 1 || id == 3 || id == 4 || id == 5 || id == 6; }
 `;
