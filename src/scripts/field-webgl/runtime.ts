@@ -97,6 +97,25 @@ function makeCodeTexture(): THREE.CanvasTexture {
   return tex;
 }
 
+// "ATLAS" wordmark texture (white on transparent) for the EF-Atlas glyph.
+function makeAtlasWordTexture(): THREE.CanvasTexture {
+  const W = 512, H = 160;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const x = c.getContext('2d')!;
+  x.clearRect(0, 0, W, H);
+  x.fillStyle = '#ffffff';
+  x.textAlign = 'center';
+  x.textBaseline = 'middle';
+  x.font = '700 112px Inter, system-ui, sans-serif';
+  drawTracked(x, 'ATLAS', W / 2, H / 2, 26);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  return tex;
+}
+
 export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean, glyph = 0, wordmark = false): FieldHandle {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   // ?reveal=full freezes the fully-revealed mark (design/debug aid).
@@ -123,6 +142,7 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean, gly
   const WORDMARK_ASPECT = 1024 / 512;
 
   const codeTex = glyph === 5 ? makeCodeTexture() : null;
+  const atlasTex = glyph === 4 ? makeAtlasWordTexture() : null;
 
   const uniforms: Record<string, THREE.IUniform> = {
     uRes: { value: new THREE.Vector2(1, 1) },
@@ -136,6 +156,7 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean, gly
     uReveal: { value: Number(new URLSearchParams(location.search).get('style')) || 0 },
     uWordmark: { value: wordmark ? 1 : 0 },
     uCode: { value: codeTex },
+    uAtlasWord: { value: atlasTex },
   };
 
   // Place the mark, preserving aspect. Wordmark = wide, centred, sized by width.
@@ -209,6 +230,7 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean, gly
       quad.geometry.dispose();
       logoTex.dispose();
       codeTex?.dispose();
+      atlasTex?.dispose();
       renderer.dispose();
     },
   };

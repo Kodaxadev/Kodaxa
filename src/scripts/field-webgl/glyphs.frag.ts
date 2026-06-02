@@ -295,40 +295,16 @@ vec4 glyphAtlasColor(vec2 p){
     put(o, smoothstep(0.02, 0.0, abs(d - R)) * 0.6, cyan);
   }
 
-  // ----- Atlas figure: a DARK silhouette with a 1-dot blue outline -----
-  // Built as a signed-distance field (min of capsules/circles). The interior
-  // is rendered with dark "off" dots (cutting the body out of the board) and a
-  // thin band at the edge gets a blue rim so the silhouette reads. Shifted DOWN
-  // so head/arms/shoulders sit clearly UNDER the globe, not mashed into it.
-  float yo = -0.14;   // vertical offset: drop the whole figure below the globe
-  #define CAP(a,b,th) (min(bd, sdSegment(p, (a)+vec2(0.0,yo), (b)+vec2(0.0,yo)) - (th)))
-  float bd = 1e3;
-  bd = CAP(vec2(-0.085,-0.05), vec2(-0.19, 0.03), 0.050);  // L upper arm
-  bd = CAP(vec2( 0.085,-0.05), vec2( 0.19, 0.03), 0.050);  // R upper arm
-  bd = min(bd, sdCircle(p - vec2(-0.19, 0.04+yo), 0.052)); // L hand
-  bd = min(bd, sdCircle(p - vec2( 0.19, 0.04+yo), 0.052)); // R hand
-  bd = CAP(vec2(-0.085,-0.05), vec2(0.085,-0.05), 0.060);  // shoulders
-  bd = min(bd, sdCircle(p - vec2(0.0,-0.05+yo), 0.062));   // head/neck mass
-  bd = CAP(vec2(0.0,-0.07), vec2(-0.02,-0.27), 0.085);     // torso
-  bd = min(bd, sdCircle(p - vec2(-0.02,-0.27+yo), 0.078)); // hips
-  bd = CAP(vec2(-0.02,-0.27), vec2(-0.22,-0.40), 0.062);   // front thigh
-  bd = CAP(vec2(-0.22,-0.40), vec2(-0.14,-0.50), 0.055);   // front shin
-  bd = CAP(vec2(-0.02,-0.27), vec2(0.20,-0.36), 0.062);    // back thigh
-  bd = CAP(vec2(0.20,-0.36), vec2(0.30,-0.50), 0.055);     // back shin
-
-  float inside = 1.0 - smoothstep(-0.012, 0.012, bd);      // body interior
-  float rim = 1.0 - smoothstep(0.0, 0.026, abs(bd));       // outline band (~2 dots)
-  // Body interior: dark dots (silhouette cut out of the board), so the figure
-  // reads as a solid dark mass beneath the world.
-  o.rgb = mix(o.rgb, vec3(0.018, 0.022, 0.034), inside);
-  o.a   = max(o.a, inside);
-  // Bright blue outline tracing the whole silhouette so it clearly reads.
-  vec3 rimC = vec3(0.32, 0.66, 1.05);
-  o.rgb = mix(o.rgb, rimC, rim);
-  o.a   = max(o.a, rim);
-
-  // ground line
-  put(o, stroke(p.y + 0.52, 0.012) * step(abs(p.x), 0.36) * 0.45, fig);
+  // ----- "ATLAS" wordmark beneath the globe -----
+  // Sampled from the uAtlasWord texture (white on transparent → alpha = glyph).
+  // Placed in a centred band below the sphere, in the bright cyan tile colour.
+  vec2 wRect = vec2(0.40, 0.125);          // half-width, half-height of the word
+  vec2 wc = vec2(0.0, -0.26);              // word centre, under the globe
+  vec2 luv = (p - wc) / (wRect * 2.0) + 0.5;
+  if(luv.x > 0.0 && luv.x < 1.0 && luv.y > 0.0 && luv.y < 1.0){
+    float wa = texture2D(uAtlasWord, vec2(1.0 - luv.x, 1.0 - luv.y)).a;
+    put(o, smoothstep(0.35, 0.6, wa), cyan);
+  }
 
   return o;
 }

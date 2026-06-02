@@ -24,6 +24,7 @@ uniform int       uGlyph;       // 0 = wolf texture; >0 = procedural project gly
 uniform int       uReveal;      // 0 = rotate reveal style each cycle; >0 = fixed style
 uniform int       uWordmark;    // 1 = uLogo is the KODAXA wordmark (palette treatment)
 uniform sampler2D uCode;        // Code-Warden: scrolling code-diff strip (glyph 5)
+uniform sampler2D uAtlasWord;   // EF-Atlas: "ATLAS" wordmark texture (glyph 4)
 
 float aspect;
 
