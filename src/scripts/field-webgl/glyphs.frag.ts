@@ -253,6 +253,62 @@ vec4 glyphStepColor(vec2 p){
   return o;
 }
 
+// ---------- EF-Atlas: Atlas holding a tiled globe ----------
+// Literal Atlas: a kneeling figure holds up a rotating, tiled world — a
+// knowledge globe built of diamond tiles (deep blue → bright cyan) that spins
+// on its axis. The corpus, mapped and carried.
+vec4 glyphAtlasColor(vec2 p){
+  vec4 o = vec4(0.0);
+  float t = uTime;
+
+  vec3 deep = vec3(0.10, 0.26, 0.62);    // deep ocean blue
+  vec3 mid  = vec3(0.16, 0.46, 0.86);    // mid blue
+  vec3 cyan = vec3(0.30, 0.78, 1.0);     // bright cyan tile
+  vec3 fig  = vec3(0.18, 0.42, 0.78);    // figure silhouette blue
+
+  // ----- Globe -----
+  vec2 gc = vec2(0.0, 0.16);             // globe centre (upper area)
+  float R = 0.30;
+  vec2 sp = p - gc;
+  float d = length(sp);
+  if(d < R + 0.02){
+    // map screen point onto sphere: latitude from y, longitude from x with the
+    // sphere's horizontal foreshortening (cos(lat)).
+    float lat = asin(clamp(sp.y / R, -1.0, 1.0));
+    float cl = max(cos(lat), 0.001);
+    float lon = asin(clamp((sp.x / R) / cl, -1.0, 1.0)) + t * 0.5;  // spin
+    // Diamond tile lattice in (lon, lat): rotate the grid 45° for diamonds.
+    float gridN = 7.0;
+    float u = lon / 3.14159 * gridN;
+    float v = lat / 3.14159 * 2.0 * gridN;
+    vec2 dia = vec2(u + v, u - v);
+    vec2 cell = abs(fract(dia) - 0.5);
+    float tile = 1.0 - smoothstep(0.30, 0.42, max(cell.x, cell.y));  // tile vs gap
+    // tile colour varies by a low-freq pattern (continents vs ocean feel)
+    float band = 0.5 + 0.5 * sin(floor(dia.x) * 1.3 + floor(dia.y) * 0.7);
+    vec3 tileC = mix(deep, mix(mid, cyan, band), 0.6 + 0.4 * band);
+    // limb shading: brighter toward the centre/left light, dimmer at the edge
+    float shade = mix(0.55, 1.15, smoothstep(R, 0.0, d)) * (0.8 + 0.3 * (0.5 - sp.x));
+    float edge = smoothstep(R, R - 0.03, d);            // crisp globe rim
+    put(o, tile * edge, tileC * shade);
+    // bright meridian rim
+    put(o, smoothstep(0.02, 0.0, abs(d - R)) * 0.6, cyan);
+  }
+
+  // ----- "ATLAS" wordmark beneath the globe -----
+  // Sampled from the uAtlasWord texture (white on transparent → alpha = glyph).
+  // Placed in a centred band below the sphere, in the bright cyan tile colour.
+  vec2 wRect = vec2(0.40, 0.125);          // half-width, half-height of the word
+  vec2 wc = vec2(0.0, -0.26);              // word centre, under the globe
+  vec2 luv = (p - wc) / (wRect * 2.0) + 0.5;
+  if(luv.x > 0.0 && luv.x < 1.0 && luv.y > 0.0 && luv.y < 1.0){
+    float wa = texture2D(uAtlasWord, vec2(luv.x, luv.y)).a;
+    put(o, smoothstep(0.35, 0.6, wa), cyan);
+  }
+
+  return o;
+}
+
 // vec2 fallback (coverage, accent) — kept for non-coloured glyphs later.
 vec2 glyphMask(int id, vec2 p){ return vec2(0.0); }
 
@@ -261,12 +317,13 @@ vec2 glyphMask(int id, vec2 p){ return vec2(0.0); }
 vec4 glyphColor(int id, vec2 p){
   if(id == 1) return glyphFrontierWardenColor(p);
   if(id == 3) return glyphSignalVaultColor(p);
+  if(id == 4) return glyphAtlasColor(p);
   if(id == 6) return glyphStepColor(p);
   return vec4(0.0);
 }
 
 // Does this glyph supply its own colour (use glyphColor, not the slate base)?
-bool glyphColored(int id){ return id == 1 || id == 3 || id == 6; }
+bool glyphColored(int id){ return id == 1 || id == 3 || id == 4 || id == 6; }
 // Is this glyph an animated scene (shown continuously, no reveal sweep)?
-bool glyphAnimated(int id){ return id == 1 || id == 3 || id == 5 || id == 6; }
+bool glyphAnimated(int id){ return id == 1 || id == 3 || id == 4 || id == 5 || id == 6; }
 `;
