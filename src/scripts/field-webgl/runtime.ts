@@ -79,6 +79,7 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean, gly
     uGlyph: { value: glyph },
     // 0 = rotate reveal style each cycle; ?style=N forces one style (QA aid).
     uReveal: { value: Number(new URLSearchParams(location.search).get('style')) || 0 },
+    uWordmark: { value: wordmark ? 1 : 0 },
   };
 
   // Place the mark, preserving aspect. Wordmark = wide, centred, sized by width.
