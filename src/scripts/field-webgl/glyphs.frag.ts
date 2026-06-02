@@ -149,22 +149,23 @@ vec4 glyphSignalVaultColor(vec2 p){
 // A small math symbol (id 0..4 = + , − , × , ÷ , =) centred at origin, scale s.
 float mathSym(int id, vec2 p, float s){
   p /= s;
+  float th = 0.17;        // bolder strokes for legibility
   if(id == 0){            // +
-    return max(stroke(p.y,0.10)*step(abs(p.x),0.9), stroke(p.x,0.10)*step(abs(p.y),0.9));
+    return max(stroke(p.y,th)*step(abs(p.x),0.95), stroke(p.x,th)*step(abs(p.y),0.95));
   } else if(id == 1){     // = (two bars)
-    return max(stroke(p.y-0.32,0.10)*step(abs(p.x),0.9), stroke(p.y+0.32,0.10)*step(abs(p.x),0.9));
+    return max(stroke(p.y-0.38,th)*step(abs(p.x),0.95), stroke(p.y+0.38,th)*step(abs(p.x),0.95));
   } else if(id == 2){     // ×
-    return max(stroke(p.x-p.y,0.10)*step(max(abs(p.x),abs(p.y)),0.85),
-               stroke(p.x+p.y,0.10)*step(max(abs(p.x),abs(p.y)),0.85));
+    return max(stroke(p.x-p.y,th)*step(max(abs(p.x),abs(p.y)),0.9),
+               stroke(p.x+p.y,th)*step(max(abs(p.x),abs(p.y)),0.9));
   } else if(id == 3){     // ÷
-    float bar = stroke(p.y,0.10)*step(abs(p.x),0.9);
-    float dots = max(solid(sdCircle(p-vec2(0.0,0.42),0.13)), solid(sdCircle(p-vec2(0.0,-0.42),0.13)));
+    float bar = stroke(p.y,th)*step(abs(p.x),0.95);
+    float dots = max(solid(sdCircle(p-vec2(0.0,0.46),0.17)), solid(sdCircle(p-vec2(0.0,-0.46),0.17)));
     return max(bar, dots);
   }
-  // √ (check-like radical)
-  return stroke(min(sdSegment(p, vec2(-0.7,0.0), vec2(-0.3,-0.5)),
-                min(sdSegment(p, vec2(-0.3,-0.5), vec2(0.1,0.6)),
-                    sdSegment(p, vec2(0.1,0.6), vec2(0.8,0.6)))), 0.10);
+  // √ (radical)
+  return stroke(min(sdSegment(p, vec2(-0.75,0.05), vec2(-0.35,-0.55)),
+                min(sdSegment(p, vec2(-0.35,-0.55), vec2(0.05,0.65)),
+                    sdSegment(p, vec2(0.05,0.65), vec2(0.85,0.65)))), 0.14);
 }
 
 // ---------- STEP: ascending step path with a climbing progress marker ----------
@@ -210,28 +211,41 @@ vec4 glyphStepColor(vec2 p){
     // landing node
     put(o, solid(sdCircle(p - a, 0.026)) * (reached ? 1.0 : 0.5), col);
 
-    // completed landings show their math symbol above the tread
+    // completed landings show a math symbol set HIGH above the tread, clear of
+    // the marker's path along the step line.
     if(reached){
       int sym = int(mod(fi, 5.0));
-      float ms = mathSym(sym, p - (a + vec2(dx*0.5, 0.075)), 0.08);
+      float ms = mathSym(sym, p - (a + vec2(dx*0.5, 0.085)), 0.105);
       put(o, ms, done);
     }
   }
 
-  // Marker: climbing the stairs, or gliding diagonally back to the start.
+  // Marker traces the actual step path: along each tread, then up the riser
+  // (an L per step), so it rides the middle of the line — not over the symbols.
   vec2 botL = vec2(x0, y0);
   vec2 topL = vec2(x0 + dx*float(N), y0 + dy*float(N));
   vec2 mp;
+  float hop = 0.0;
   if(resetting){
     float r = clamp(prog - (float(N) + HOLD), 0.0, 1.0);
-    mp = mix(topL, botL, smoothstep(0.0, 1.0, r));
+    mp = mix(topL, botL, smoothstep(0.0, 1.0, r));   // glide home
   } else {
-    vec2 ma = vec2(x0 + dx*cur, y0 + dy*cur);
-    vec2 mb = vec2(x0 + dx*(cur+1.0), y0 + dy*(cur+1.0));
-    mp = mix(ma, mb, smoothstep(0.0, 1.0, segT));
+    vec2 a = vec2(x0 + dx*cur, y0 + dy*cur);          // current landing
+    vec2 b = vec2(a.x + dx, a.y);                      // tread end
+    vec2 c = vec2(b.x, b.y + dy);                      // next landing (up riser)
+    if(segT < 0.6){
+      mp = mix(a, b, smoothstep(0.0, 1.0, segT / 0.6));        // walk the tread
+      hop = sin((segT / 0.6) * 3.14159) * 0.018;               // little hop arc
+    } else {
+      mp = mix(b, c, smoothstep(0.0, 1.0, (segT - 0.6) / 0.4)); // step up the riser
+    }
   }
-  put(o, solid(sdCircle(p - mp, 0.034)), mark);
-  put(o, stroke(sdCircle(p - mp, 0.06), 0.014) * 0.6, mark);   // glow ring
+  mp.y += hop;
+  float beat = 0.85 + 0.15 * sin(t * 7.0);            // gentle pulse
+  // trailing dot just behind on the path (motion cue)
+  put(o, solid(sdCircle(p - (mp - vec2(0.03, 0.0)), 0.018)) * 0.5, mark);
+  put(o, solid(sdCircle(p - mp, 0.030 * beat)), mark);
+  put(o, stroke(sdCircle(p - mp, 0.058), 0.013) * 0.55 * beat, mark);  // glow ring
 
   return o;
 }
