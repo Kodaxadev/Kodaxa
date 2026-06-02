@@ -211,11 +211,12 @@ vec4 glyphStepColor(vec2 p){
     // landing node
     put(o, solid(sdCircle(p - a, 0.026)) * (reached ? 1.0 : 0.5), col);
 
-    // completed landings show a math symbol set HIGH above the tread, clear of
-    // the marker's path along the step line.
+    // completed landings show a math symbol floating in the open space above
+    // the tread — smaller, and centred in the gap to the next step so its dots
+    // never merge into either step line.
     if(reached){
       int sym = int(mod(fi, 5.0));
-      float ms = mathSym(sym, p - (a + vec2(dx*0.5, 0.085)), 0.105);
+      float ms = mathSym(sym, p - (a + vec2(dx*0.5, 0.135)), 0.072);
       put(o, ms, done);
     }
   }
