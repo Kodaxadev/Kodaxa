@@ -18,7 +18,7 @@ export const GLYPH_IDS: Record<string, number> = {
 // Glyph ids that actually have a built scene in glyphs.frag.ts. Unbuilt ids
 // fall back to 0 (the wolf ambient) so no page shows a blank panel. Add an id
 // here when its scene ships.
-const BUILT_GLYPHS = new Set<number>([1, 3, 5]); // FrontierWarden, Signal Vault, Code-Warden
+const BUILT_GLYPHS = new Set<number>([1, 3, 5, 6]); // FrontierWarden, Signal Vault, Code-Warden, STEP
 
 export const glyphId = (key: string | null | undefined): number => {
   const id = (key && GLYPH_IDS[key]) || 0;

@@ -146,6 +146,96 @@ vec4 glyphSignalVaultColor(vec2 p){
   return o;
 }
 
+// A small math symbol (id 0..4 = + , − , × , ÷ , =) centred at origin, scale s.
+float mathSym(int id, vec2 p, float s){
+  p /= s;
+  if(id == 0){            // +
+    return max(stroke(p.y,0.10)*step(abs(p.x),0.9), stroke(p.x,0.10)*step(abs(p.y),0.9));
+  } else if(id == 1){     // = (two bars)
+    return max(stroke(p.y-0.32,0.10)*step(abs(p.x),0.9), stroke(p.y+0.32,0.10)*step(abs(p.x),0.9));
+  } else if(id == 2){     // ×
+    return max(stroke(p.x-p.y,0.10)*step(max(abs(p.x),abs(p.y)),0.85),
+               stroke(p.x+p.y,0.10)*step(max(abs(p.x),abs(p.y)),0.85));
+  } else if(id == 3){     // ÷
+    float bar = stroke(p.y,0.10)*step(abs(p.x),0.9);
+    float dots = max(solid(sdCircle(p-vec2(0.0,0.42),0.13)), solid(sdCircle(p-vec2(0.0,-0.42),0.13)));
+    return max(bar, dots);
+  }
+  // √ (check-like radical)
+  return stroke(min(sdSegment(p, vec2(-0.7,0.0), vec2(-0.3,-0.5)),
+                min(sdSegment(p, vec2(-0.3,-0.5), vec2(0.1,0.6)),
+                    sdSegment(p, vec2(0.1,0.6), vec2(0.8,0.6)))), 0.10);
+}
+
+// ---------- STEP: ascending step path with a climbing progress marker ----------
+// "Procedure-first learning, missing steps made visible." A staircase climbs
+// left→right; a marker ascends step by step, each landing flashing complete
+// with a small math symbol. Loops back to the bottom to climb again.
+vec4 glyphStepColor(vec2 p){
+  vec4 o = vec4(0.0);
+  float t = uTime;
+
+  const int N = 6;                 // number of steps
+  float x0 = -0.42, y0 = -0.32;    // first landing
+  float dx = 0.16, dy = 0.118;     // step spacing
+
+  // Climbing marker: climbs N steps, brief hold at the summit, then a quick
+  // glide back to the bottom — so it's always visibly moving.
+  float HOLD = 1.0;                            // summit hold (in step-units)
+  float cycleLen = float(N) + HOLD + 1.0;      // climb + hold + reset glide
+  float prog = mod(t * 0.7, cycleLen);
+  bool resetting = prog > float(N) + HOLD;     // gliding back down
+  float climb = min(prog, float(N));
+  float cur = floor(climb);
+  float segT = clamp(climb - cur, 0.0, 1.0);
+
+  vec3 tread = vec3(0.26, 0.55, 0.68);   // pending step (calm teal)
+  vec3 done  = vec3(0.45, 0.88, 0.98);   // completed step (bright)
+  vec3 mark  = vec3(1.0, 0.90, 0.50);    // climbing marker (warm)
+
+  for(int i = 0; i < N; i++){
+    float fi = float(i);
+    vec2 a = vec2(x0 + dx*fi, y0 + dy*fi);          // landing i
+    vec2 b = vec2(x0 + dx*(fi+1.0), y0 + dy*fi);    // tread end (horizontal)
+    vec2 c = vec2(b.x, b.y + dy);                    // riser up to next landing
+    bool reached = !resetting && fi <= cur;
+    vec3 col = reached ? done : tread;
+    float w = reached ? 0.95 : 0.45;
+
+    // tread (horizontal) + riser (vertical), doubled for a bolder stair edge
+    float stair = min(sdSegment(p, a, b), sdSegment(p, b, c));
+    put(o, stroke(stair, 0.016) * w, col);
+    put(o, stroke(stair, 0.030) * w * 0.35, col);   // soft outer glow
+
+    // landing node
+    put(o, solid(sdCircle(p - a, 0.026)) * (reached ? 1.0 : 0.5), col);
+
+    // completed landings show their math symbol above the tread
+    if(reached){
+      int sym = int(mod(fi, 5.0));
+      float ms = mathSym(sym, p - (a + vec2(dx*0.5, 0.075)), 0.08);
+      put(o, ms, done);
+    }
+  }
+
+  // Marker: climbing the stairs, or gliding diagonally back to the start.
+  vec2 botL = vec2(x0, y0);
+  vec2 topL = vec2(x0 + dx*float(N), y0 + dy*float(N));
+  vec2 mp;
+  if(resetting){
+    float r = clamp(prog - (float(N) + HOLD), 0.0, 1.0);
+    mp = mix(topL, botL, smoothstep(0.0, 1.0, r));
+  } else {
+    vec2 ma = vec2(x0 + dx*cur, y0 + dy*cur);
+    vec2 mb = vec2(x0 + dx*(cur+1.0), y0 + dy*(cur+1.0));
+    mp = mix(ma, mb, smoothstep(0.0, 1.0, segT));
+  }
+  put(o, solid(sdCircle(p - mp, 0.034)), mark);
+  put(o, stroke(sdCircle(p - mp, 0.06), 0.014) * 0.6, mark);   // glow ring
+
+  return o;
+}
+
 // vec2 fallback (coverage, accent) — kept for non-coloured glyphs later.
 vec2 glyphMask(int id, vec2 p){ return vec2(0.0); }
 
@@ -154,11 +244,12 @@ vec2 glyphMask(int id, vec2 p){ return vec2(0.0); }
 vec4 glyphColor(int id, vec2 p){
   if(id == 1) return glyphFrontierWardenColor(p);
   if(id == 3) return glyphSignalVaultColor(p);
+  if(id == 6) return glyphStepColor(p);
   return vec4(0.0);
 }
 
 // Does this glyph supply its own colour (use glyphColor, not the slate base)?
-bool glyphColored(int id){ return id == 1 || id == 3; }
+bool glyphColored(int id){ return id == 1 || id == 3 || id == 6; }
 // Is this glyph an animated scene (shown continuously, no reveal sweep)?
-bool glyphAnimated(int id){ return id == 1 || id == 3 || id == 5; }
+bool glyphAnimated(int id){ return id == 1 || id == 3 || id == 5 || id == 6; }
 `;
