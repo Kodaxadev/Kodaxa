@@ -144,6 +144,20 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean, gly
   const codeTex = glyph === 5 ? makeCodeTexture() : null;
   const atlasTex = glyph === 4 ? makeAtlasWordTexture() : null;
 
+  // Independent square-tile model. Default ON for the /work wordmark. Overrides:
+  //   ?tiles=square — force ON for any board (incl. project glyphs)
+  //   ?tiles=dot    — force OFF (classic flip-dot discs) everywhere
+  const tilesParam = new URLSearchParams(location.search).get('tiles');
+  const tileOn = tilesParam === 'square' || tilesParam === 'tile'
+    ? true
+    : tilesParam === 'dot'
+      ? false
+      : wordmark;
+  // Hybrid look: BOLD boards (the wordmark + Signal Vault, glyph 3) render as
+  // larger Vestaboard split-flap tiles (visible seam); DETAIL boards keep small
+  // tiles for image fidelity.
+  const bigFlap = tileOn && (wordmark || glyph === 3);
+
   const uniforms: Record<string, THREE.IUniform> = {
     uRes: { value: new THREE.Vector2(1, 1) },
     uTime: { value: 0 },
@@ -155,6 +169,10 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean, gly
     // 0 = rotate reveal style each cycle; ?style=N forces one style (QA aid).
     uReveal: { value: Number(new URLSearchParams(location.search).get('style')) || 0 },
     uWordmark: { value: wordmark ? 1 : 0 },
+    uTileModel: { value: tileOn ? 1 : 0 },
+    // Hybrid look: 1 = BOLD Vestaboard split-flap board (larger tiles + seam),
+    // 0 = small detail tiles. Only meaningful when uTileModel == 1.
+    uFlapStyle: { value: bigFlap ? 1 : 0 },
     uCode: { value: codeTex },
     uAtlasWord: { value: atlasTex },
   };
@@ -199,9 +217,13 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean, gly
     // Tile density = board "resolution"; smaller tiles → finer board. Hero
     // pushes high for an HD wolf; ambient is denser now too so the side panels
     // read fine and schematic rather than toy-like.
-    // Code-Warden needs finer dots so real code text stays legible.
-    const px = glyph === 5 ? 3.0 : (ambient ? 4.5 : 4);
-    const cap = glyph === 5 ? 620 : (ambient ? 420 : 480);
+    // Code-Warden needs finer dots so real code text stays legible. Detail tile
+    // boards go dense for HD fidelity; BOLD split-flap boards (wordmark, Signal
+    // Vault) use larger tiles so the Vestaboard seam reads.
+    const tileModel = (uniforms.uTileModel.value as number) === 1;
+    const bigFlapDensity = (uniforms.uFlapStyle.value as number) === 1;
+    const px = glyph === 5 ? 3.0 : bigFlapDensity ? 5.0 : tileModel ? 3.4 : (ambient ? 4.5 : 4);
+    const cap = glyph === 5 ? 620 : bigFlapDensity ? 360 : tileModel ? 560 : (ambient ? 420 : 480);
     uniforms.uTiles.value = Math.min(cap, Math.round(w / px));
   };
 

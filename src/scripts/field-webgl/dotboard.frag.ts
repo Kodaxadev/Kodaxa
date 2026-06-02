@@ -25,6 +25,8 @@ uniform int       uReveal;      // 0 = rotate reveal style each cycle; >0 = fixe
 uniform int       uWordmark;    // 1 = uLogo is the KODAXA wordmark (palette treatment)
 uniform sampler2D uCode;        // Code-Warden: scrolling code-diff strip (glyph 5)
 uniform sampler2D uAtlasWord;   // EF-Atlas: "ATLAS" wordmark texture (glyph 4)
+uniform int       uTileModel;   // 1 = independent filled square tiles (vs dots)
+uniform int       uFlapStyle;   // 1 = bold Vestaboard split-flap tile (seam + larger)
 
 float aspect;
 
@@ -244,18 +246,68 @@ void main(){
   float sizeVar = 0.84 + rnd * 0.05;            // dot radius threshold ~0.84..0.89 (fuller dots)
   float bright = 0.94 + rnd2 * 0.10;            // ~0.94..1.04, gentle
 
-  // --- dot geometry: a disc that squashes vertically while flipping ---
-  float squash = mix(1.0, 0.12, flip);          // edge-on at the flip instant
-  vec2 dp = tileUv / 0.5;                        // -1..1
-  dp.y /= max(squash, 0.04);
-  float aa = 2.6 * grid.y / max(uRes.y, 1.0);
-  float disc = 1.0 - smoothstep(sizeVar - aa, sizeVar + aa, length(dp));
-
-  // Faint dark board at rest; wolf tiles flip to their colour with a snap pop.
   vec3 offCol = vec3(0.026, 0.030, 0.044);
-  vec3 dotCol = mix(offCol, wolfCol * bright, on);
-  dotCol += wolfCol * flip * 0.55;
-  vec3 col = dotCol * disc;
+  vec3 col;
+
+  if(uTileModel == 1){
+    // ===== Independent filled square-tile model (LED video-wall) =====
+    // Each tile is its own light: a filled rounded square with VISIBLE gaps,
+    // its face carrying a rich per-tile DUAL-TONE gradient (a deep cool shade
+    // ramping to a hot, saturated tint of the SAME glyph colour) plus a soft
+    // emissive centre — so every tile reads like an individual LED.
+    vec2 q = abs(tileUv * 2.0);                   // 0..1 from centre to edge
+    float gap = 0.16;                             // inter-tile gap (keep the LED grid)
+    float r = 0.22;                               // corner radius
+    // rounded-square coverage (1 inside the tile face, 0 in the gap)
+    vec2 d2 = q - (1.0 - gap);
+    float sq = length(max(d2, 0.0)) + min(max(d2.x, d2.y), 0.0) - r * (1.0 - gap);
+    float aaT = 2.4 * grid.y / max(uRes.y, 1.0);
+    float face = 1.0 - smoothstep(-aaT, aaT, sq);
+
+    // Two REAL tones from this tile's own colour (hue preserved, so it still
+    // reads as the project's palette): a deep, slightly-cool shade and a hot,
+    // brighter, more-saturated tint. Blended across the tile along a per-tile
+    // direction → a genuine dual-colour gradient, not a brightness fade.
+    float luma = dot(wolfCol, vec3(0.299, 0.587, 0.114));
+    vec3 hot  = clamp((wolfCol - luma) * 1.65 + luma * 1.18 + 0.04, 0.0, 2.0);
+    vec3 cool = mix(wolfCol, vec3(luma) * vec3(0.80, 0.90, 1.12), 0.32) * 0.50;
+    float ga = rnd * 6.2831;                       // per-tile gradient angle
+    vec2 gdir = vec2(cos(ga), sin(ga));
+    float gt = clamp(dot(tileUv, gdir) * 1.4 + 0.5, 0.0, 1.0);
+    vec3 tileCol = mix(cool, hot, gt) * bright;
+
+    // Soft emissive hotspot toward the tile centre → "each tile is a light".
+    float core = 1.0 - smoothstep(0.0, 0.62, length(tileUv));
+    tileCol += hot * core * 0.22;
+
+    // Independent flip: brief vertical edge-on squash at the flip instant.
+    float tFlip = max(flip, 0.0);
+    float squashT = mix(1.0, 0.18, tFlip);
+    float sy = abs(tileUv.y) / max(0.5 * squashT, 0.02);
+    face *= 1.0 - smoothstep(0.92, 1.0, sy);
+
+    // Split-flap seam: bold boards get a thin dark divider across the tile
+    // centre (a Vestaboard flap's top/bottom gap); these aggregate into
+    // horizontal flap-rows across the whole board.
+    if(uFlapStyle == 1){
+      float seam = smoothstep(0.07, 0.0, abs(tileUv.y));
+      face *= 1.0 - seam * 0.5;
+    }
+
+    col = mix(offCol, tileCol, on);
+    col += tileCol * tFlip * 0.5;
+    col *= face;
+  } else {
+    // ===== Classic flip-dot model (disc) =====
+    float squash = mix(1.0, 0.12, flip);          // edge-on at the flip instant
+    vec2 dp = tileUv / 0.5;                        // -1..1
+    dp.y /= max(squash, 0.04);
+    float aa = 2.6 * grid.y / max(uRes.y, 1.0);
+    float disc = 1.0 - smoothstep(sizeVar - aa, sizeVar + aa, length(dp));
+    vec3 dotCol = mix(offCol, wolfCol * bright, on);
+    dotCol += wolfCol * flip * 0.55;
+    col = dotCol * disc;
+  }
 
   // Keep the board faint on the far left so the headline stays legible.
   col *= mix(0.28, 1.0, smoothstep(0.0, 0.34, uv.x));
