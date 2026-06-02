@@ -22,6 +22,7 @@ uniform sampler2D uLogo;        // wolf mark (RGBA, alpha = coverage)
 uniform vec4      uLogoRect;    // x, y, w, h in uv space
 uniform int       uGlyph;       // 0 = wolf texture; >0 = procedural project glyph
 uniform int       uReveal;      // 0 = rotate reveal style each cycle; >0 = fixed style
+uniform int       uWordmark;    // 1 = uLogo is the KODAXA wordmark (palette treatment)
 
 float aspect;
 
@@ -54,7 +55,61 @@ void main(){
   float coverage;
   vec3 wolfCol;
 
-  if(uGlyph > 0 && glyphColored(uGlyph)){
+  // Shared cycle index (matches the reveal lifecycle) so the wordmark palette
+  // and the reveal style change together each presentation.
+  float CYCLE_TOTAL = 12.3;
+  float cyc = floor(uTime / CYCLE_TOTAL);
+  float cycRnd = hash21(vec2(cyc, 7.3));     // per-cycle random 0..1
+
+  if(uWordmark > 0){
+    // --- KODAXA wordmark: wolf-palette dot treatment, randomised per cycle ---
+    // Colour comes ONLY from smooth low-frequency PATTERN functions of position
+    // (+ slow time), never per-dot randomness — so neighbours always share
+    // colour and transitions read as coherent bands, not speckle.
+    vec4 wm = wolfAt(tileCenter);
+    coverage = smoothstep(0.4, 0.6, wm.a);
+
+    // Wolf palette stops.
+    vec3 navy   = vec3(0.10, 0.16, 0.34);
+    vec3 slate  = vec3(0.34, 0.45, 0.62);
+    vec3 silver = vec3(0.74, 0.82, 0.92);
+    vec3 ice    = vec3(0.86, 0.95, 1.05);
+    vec3 cyan   = vec3(0.25, 0.78, 1.05);
+
+    // A primary gradient axis that rotates per cycle (smooth across the field).
+    float ang = cycRnd * 6.2831;
+    vec2 dir = vec2(cos(ang), sin(ang));
+    float g = clamp(dot(tileCenter - 0.5, dir) + 0.5, 0.0, 1.0);
+    // A second, lower-frequency flowing wave for variation within the gradient.
+    float wave = 0.5 + 0.5 * sin((tileCenter.x + tileCenter.y) * 5.0 + uTime * 0.5 + cyc);
+
+    int mode = int(mod(cyc, 4.0));
+    vec3 wc;
+    if(mode == 0){
+      // navy → silver → ice along the rotating axis (smooth ramp)
+      wc = mix(navy, silver, smoothstep(0.0, 0.8, g));
+      wc = mix(wc, ice, smoothstep(0.75, 1.0, g));
+    } else if(mode == 1){
+      // duotone bands: navy↔slate↔silver driven by the flowing wave
+      wc = mix(slate, silver, wave);
+      wc = mix(wc, navy, smoothstep(0.6, 1.0, 1.0 - g) * 0.6);
+    } else if(mode == 2){
+      // icy silver body, navy settling toward the lower edge (vertical ramp)
+      wc = mix(navy, silver, smoothstep(0.0, 0.9, tileCenter.y));
+      wc = mix(wc, ice, smoothstep(0.6, 1.0, wave));
+    } else {
+      // cool steel: slate base with broad silver sheen sweeping across
+      wc = mix(slate, silver, smoothstep(0.2, 0.9, g * 0.6 + wave * 0.4));
+    }
+
+    // Cyan energy: a single smooth travelling band sweeping along the gradient
+    // axis (a wide soft highlight, not sparkles). Coherent across neighbours.
+    float bandPos = fract(uTime * 0.10 + cyc * 0.37);
+    float cyanBand = smoothstep(0.16, 0.0, abs(g - bandPos));
+    wc = mix(wc, cyan, cyanBand * (0.45 + 0.2 * pulse));
+
+    wolfCol = floor(wc * 16.0 + 0.5) / 16.0;
+  } else if(uGlyph > 0 && glyphColored(uGlyph)){
     // --- colour-aware procedural glyph (e.g. solar system): each body its
     // own colour. glyphColor returns vec4(rgb, lit). ---
     vec2 gp = vec2((tileCenter.x - 0.5) * aspect, tileCenter.y - 0.5);
