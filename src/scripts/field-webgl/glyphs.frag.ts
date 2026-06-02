@@ -216,7 +216,9 @@ vec4 glyphStepColor(vec2 p){
     // never merge into either step line.
     if(reached){
       int sym = int(mod(fi, 5.0));
-      float ms = mathSym(sym, p - (a + vec2(dx*0.5, 0.135)), 0.072);
+      // Shifted left of the tread centre so the symbol's right edge clears the
+      // riser of the step above it.
+      float ms = mathSym(sym, p - (a + vec2(dx*0.32, 0.135)), 0.072);
       put(o, ms, done);
     }
   }
