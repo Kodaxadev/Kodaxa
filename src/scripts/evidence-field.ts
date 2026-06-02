@@ -3,6 +3,7 @@
 // runtime + three.js are lazy-imported after first paint so they never block
 // the homepage LCP, and only on the page that actually hosts a field.
 import { start2dField } from './field';
+import { glyphId } from './field-webgl/glyph-ids';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#evidence-canvas');
 
@@ -17,6 +18,7 @@ const hasWebgl = () => {
 
 if (canvas) {
   const ambient = canvas.dataset.variant === 'ambient';
+  const glyph = glyphId(canvas.dataset.glyph);
   let handle: { destroy: () => void } | null = null;
   let disposed = false;
 
@@ -31,7 +33,7 @@ if (canvas) {
       import('./field-webgl/runtime')
         .then((m) => {
           if (disposed) return;
-          handle = m.startWebglField(canvas, ambient);
+          handle = m.startWebglField(canvas, ambient, glyph);
         })
         .catch(startFallback);
     if ('requestIdleCallback' in window) {
