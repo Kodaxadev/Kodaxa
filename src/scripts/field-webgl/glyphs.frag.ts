@@ -150,6 +150,7 @@ vec4 glyphSignalVaultColor(vec2 p){
 vec2 glyphMask(int id, vec2 p){ return vec2(0.0); }
 
 // Colour-aware dispatch: returns vec4(rgb, lit). id 0 = none.
+// (id 5 Code-Warden is handled directly in the dotboard via the uCode texture.)
 vec4 glyphColor(int id, vec2 p){
   if(id == 1) return glyphFrontierWardenColor(p);
   if(id == 3) return glyphSignalVaultColor(p);
@@ -159,5 +160,5 @@ vec4 glyphColor(int id, vec2 p){
 // Does this glyph supply its own colour (use glyphColor, not the slate base)?
 bool glyphColored(int id){ return id == 1 || id == 3; }
 // Is this glyph an animated scene (shown continuously, no reveal sweep)?
-bool glyphAnimated(int id){ return id == 1 || id == 3; }
+bool glyphAnimated(int id){ return id == 1 || id == 3 || id == 5; }
 `;

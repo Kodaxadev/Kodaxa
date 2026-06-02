@@ -44,6 +44,59 @@ function drawTracked(x: CanvasRenderingContext2D, s: string, cx: number, cy: num
   }
 }
 
+// A tall, seamless strip of real code lines with diff colouring + gutter marks
+// baked in, for Code-Warden's scrolling review. White-ish text on transparent;
+// the dotboard scrolls V through it. Wraps seamlessly (it's mod-sampled).
+const CODE_LINES: { g: '+' | '-' | ' '; t: string }[] = [
+  { g: ' ', t: 'export function review(patch) {' },
+  { g: ' ', t: '  const scope = loadScope();' },
+  { g: '-', t: '  if (patch.size > scope.maxFiles) return;' },
+  { g: '+', t: '  if (patch.size > scope.maxFiles)' },
+  { g: '+', t: '    return block("scope exceeded");' },
+  { g: ' ', t: '  for (const f of patch.files) {' },
+  { g: '+', t: '    if (hasSecret(f)) flag(f, "secret");' },
+  { g: ' ', t: '    verify(f.diff);' },
+  { g: '-', t: '    log(f.name);' },
+  { g: ' ', t: '  }' },
+  { g: ' ', t: '  return receipt(patch, checks);' },
+  { g: ' ', t: '}' },
+  { g: ' ', t: '' },
+  { g: ' ', t: 'const gate = new PlanGate(rules);' },
+  { g: '+', t: 'gate.on("write", assertVerified);' },
+  { g: ' ', t: 'export default gate;' },
+];
+function makeCodeTexture(): THREE.CanvasTexture {
+  const W = 512, lineH = 26, pad = 14;
+  const H = CODE_LINES.length * lineH;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const x = c.getContext('2d')!;
+  x.clearRect(0, 0, W, H);
+  x.font = '500 17px "IBM Plex Mono", ui-monospace, monospace';
+  x.textBaseline = 'middle';
+  CODE_LINES.forEach((ln, i) => {
+    const y = i * lineH + lineH / 2;
+    const added = ln.g === '+', removed = ln.g === '-';
+    // diff row tint background
+    if (added || removed) {
+      x.fillStyle = added ? 'rgba(40,180,90,0.16)' : 'rgba(220,70,60,0.16)';
+      x.fillRect(0, i * lineH, W, lineH);
+    }
+    // gutter mark
+    x.fillStyle = added ? '#46e08a' : removed ? '#ff6a5a' : '#3a4658';
+    x.fillText(ln.g, 4, y);
+    // code text
+    x.fillStyle = added ? '#8ef0b4' : removed ? '#ffb0a6' : '#9fb2cc';
+    x.fillText(ln.t, pad + 12, y);
+  });
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  return tex;
+}
+
 export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean, glyph = 0, wordmark = false): FieldHandle {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   // ?reveal=full freezes the fully-revealed mark (design/debug aid).
@@ -69,6 +122,8 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean, gly
   }
   const WORDMARK_ASPECT = 1024 / 512;
 
+  const codeTex = glyph === 5 ? makeCodeTexture() : null;
+
   const uniforms: Record<string, THREE.IUniform> = {
     uRes: { value: new THREE.Vector2(1, 1) },
     uTime: { value: 0 },
@@ -80,6 +135,7 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean, gly
     // 0 = rotate reveal style each cycle; ?style=N forces one style (QA aid).
     uReveal: { value: Number(new URLSearchParams(location.search).get('style')) || 0 },
     uWordmark: { value: wordmark ? 1 : 0 },
+    uCode: { value: codeTex },
   };
 
   // Place the mark, preserving aspect. Wordmark = wide, centred, sized by width.
@@ -122,8 +178,10 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean, gly
     // Tile density = board "resolution"; smaller tiles → finer board. Hero
     // pushes high for an HD wolf; ambient is denser now too so the side panels
     // read fine and schematic rather than toy-like.
-    const px = ambient ? 4.5 : 4;
-    uniforms.uTiles.value = Math.min(ambient ? 420 : 480, Math.round(w / px));
+    // Code-Warden needs finer dots so real code text stays legible.
+    const px = glyph === 5 ? 3.0 : (ambient ? 4.5 : 4);
+    const cap = glyph === 5 ? 620 : (ambient ? 420 : 480);
+    uniforms.uTiles.value = Math.min(cap, Math.round(w / px));
   };
 
   const clock = new THREE.Clock();
@@ -150,6 +208,7 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean, gly
       material.dispose();
       quad.geometry.dispose();
       logoTex.dispose();
+      codeTex?.dispose();
       renderer.dispose();
     },
   };
