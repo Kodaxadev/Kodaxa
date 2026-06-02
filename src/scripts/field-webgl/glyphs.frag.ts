@@ -253,63 +253,74 @@ vec4 glyphStepColor(vec2 p){
   return o;
 }
 
-// ---------- EF-Atlas: tiered knowledge map ----------
-// Authority-tiered knowledge corpus → a map of source nodes in concentric
-// tiers: a bright authoritative core (official truth), an inner ring (specs /
-// tooling), an outer ring (community references, dimmer). Provenance links run
-// core→nodes, and a query pulse expands outward periodically, lighting each
-// tier in sequence as the corpus is searched.
+// ---------- EF-Atlas: Atlas holding a tiled globe ----------
+// Literal Atlas: a kneeling figure holds up a rotating, tiled world — a
+// knowledge globe built of diamond tiles (deep blue → bright cyan) that spins
+// on its axis. The corpus, mapped and carried.
 vec4 glyphAtlasColor(vec2 p){
   vec4 o = vec4(0.0);
   float t = uTime;
-  float rr = length(p);
 
-  // Tier palette: official gold core → cyan specs → slate community.
-  vec3 gold  = vec3(1.0, 0.78, 0.32);
-  vec3 cyan  = vec3(0.35, 0.80, 0.98);
-  vec3 slate = vec3(0.45, 0.55, 0.70);
+  vec3 deep = vec3(0.10, 0.26, 0.62);    // deep ocean blue
+  vec3 mid  = vec3(0.16, 0.46, 0.86);    // mid blue
+  vec3 cyan = vec3(0.30, 0.78, 1.0);     // bright cyan tile
+  vec3 fig  = vec3(0.18, 0.42, 0.78);    // figure silhouette blue
 
-  // Query pulse: a ring expanding 0→0.5 radius, fading; lights nodes it crosses.
-  float qPhase = fract(t * 0.22);
-  float qR = qPhase * 0.52;
-  float qFade = 1.0 - qPhase;
-
-  // Faint tier orbit rings.
-  put(o, stroke(rr - 0.20, 0.006) * 0.22, cyan);
-  put(o, stroke(rr - 0.38, 0.006) * 0.18, slate);
-
-  // Authoritative core (gold), gently breathing.
-  float core = 0.05 + 0.006 * sin(t * 1.6);
-  put(o, solid(rr - core * 1.7) * 0.5, gold * 0.6);
-  put(o, solid(rr - core), gold);
-
-  // Inner tier: 6 spec/tooling nodes; Outer tier: 10 community nodes.
-  for(int i = 0; i < 16; i++){
-    float fi = float(i);
-    bool inner = i < 6;
-    float count = inner ? 6.0 : 10.0;
-    float idx = inner ? fi : fi - 6.0;
-    float ring = inner ? 0.20 : 0.38;
-    float spin = inner ? t * 0.10 : -t * 0.06;        // tiers rotate slowly
-    float ang = (idx / count) * 6.2831 + spin + (inner ? 0.0 : 0.3);
-    vec2 np = vec2(cos(ang), sin(ang)) * ring;
-
-    vec3 nodeC = inner ? cyan : slate;
-    float nodeR = inner ? 0.022 : 0.017;
-
-    // provenance link core→node (inner tier only, keeps it readable)
-    if(inner){
-      put(o, stroke(sdSegment(p, vec2(0.0), np), 0.006) * 0.28, cyan);
-    }
-
-    // node lights up brighter when the query pulse passes its radius
-    float hit = smoothstep(0.06, 0.0, abs(qR - ring)) * qFade;
-    put(o, solid(sdCircle(p - np, nodeR)) * (0.55 + hit * 0.8),
-        mix(nodeC, vec3(1.0), hit * 0.5));
+  // ----- Globe -----
+  vec2 gc = vec2(0.0, 0.16);             // globe centre (upper area)
+  float R = 0.30;
+  vec2 sp = p - gc;
+  float d = length(sp);
+  if(d < R + 0.02){
+    // map screen point onto sphere: latitude from y, longitude from x with the
+    // sphere's horizontal foreshortening (cos(lat)).
+    float lat = asin(clamp(sp.y / R, -1.0, 1.0));
+    float cl = max(cos(lat), 0.001);
+    float lon = asin(clamp((sp.x / R) / cl, -1.0, 1.0)) + t * 0.5;  // spin
+    // Diamond tile lattice in (lon, lat): rotate the grid 45° for diamonds.
+    float gridN = 7.0;
+    float u = lon / 3.14159 * gridN;
+    float v = lat / 3.14159 * 2.0 * gridN;
+    vec2 dia = vec2(u + v, u - v);
+    vec2 cell = abs(fract(dia) - 0.5);
+    float tile = 1.0 - smoothstep(0.30, 0.42, max(cell.x, cell.y));  // tile vs gap
+    // tile colour varies by a low-freq pattern (continents vs ocean feel)
+    float band = 0.5 + 0.5 * sin(floor(dia.x) * 1.3 + floor(dia.y) * 0.7);
+    vec3 tileC = mix(deep, mix(mid, cyan, band), 0.6 + 0.4 * band);
+    // limb shading: brighter toward the centre/left light, dimmer at the edge
+    float shade = mix(0.55, 1.15, smoothstep(R, 0.0, d)) * (0.8 + 0.3 * (0.5 - sp.x));
+    float edge = smoothstep(R, R - 0.03, d);            // crisp globe rim
+    put(o, tile * edge, tileC * shade);
+    // bright meridian rim
+    put(o, smoothstep(0.02, 0.0, abs(d - R)) * 0.6, cyan);
   }
 
-  // The expanding query ring itself.
-  put(o, stroke(rr - qR, 0.008) * qFade * 0.7, mix(gold, cyan, 0.4));
+  // ----- Atlas: a BOLD FILLED silhouette kneeling under the globe -----
+  // Built from thick capsules (wide stroke = filled limb) + circles so it reads
+  // as a solid figure at dot resolution, like the reference's flat-blue Atlas.
+  // capsule(a,b,th) = solid rounded bar; circle = solid joint/mass.
+  float body = 0.0;
+  // Raised arms cradling the globe (hands meet the sphere's lower sides).
+  body = max(body, 1.0 - smoothstep(0.052,0.066, sdSegment(p, vec2(-0.085,-0.05), vec2(-0.20, 0.06)))); // L upper arm
+  body = max(body, 1.0 - smoothstep(0.052,0.066, sdSegment(p, vec2( 0.085,-0.05), vec2( 0.20, 0.06)))); // R upper arm
+  body = max(body, solid(sdCircle(p - vec2(-0.20,0.07), 0.05)));   // L hand mass
+  body = max(body, solid(sdCircle(p - vec2( 0.20,0.07), 0.05)));   // R hand mass
+  // Shoulders + head.
+  body = max(body, 1.0 - smoothstep(0.075,0.090, sdSegment(p, vec2(-0.085,-0.05), vec2(0.085,-0.05)))); // shoulders
+  body = max(body, solid(sdCircle(p - vec2(0.0,-0.04), 0.058)));   // head/upper torso mass
+  // Torso tapering to the hips.
+  body = max(body, 1.0 - smoothstep(0.085,0.10, sdSegment(p, vec2(0.0,-0.06), vec2(-0.02,-0.26))));     // torso
+  body = max(body, solid(sdCircle(p - vec2(-0.02,-0.26), 0.075)));  // hips mass
+  // Front leg: thigh forward-down to a bent knee, then shin to the ground.
+  body = max(body, 1.0 - smoothstep(0.060,0.075, sdSegment(p, vec2(-0.02,-0.26), vec2(-0.22,-0.40))));  // front thigh
+  body = max(body, 1.0 - smoothstep(0.055,0.070, sdSegment(p, vec2(-0.22,-0.40), vec2(-0.14,-0.50))));  // front shin
+  // Back leg: thigh back-down, shin planted (the lunge).
+  body = max(body, 1.0 - smoothstep(0.060,0.075, sdSegment(p, vec2(-0.02,-0.26), vec2(0.20,-0.36))));   // back thigh
+  body = max(body, 1.0 - smoothstep(0.055,0.070, sdSegment(p, vec2(0.20,-0.36), vec2(0.30,-0.50))));    // back shin
+  put(o, body, fig);
+
+  // ground line
+  put(o, stroke(p.y + 0.50, 0.012) * step(abs(p.x), 0.36) * 0.5, fig);
 
   return o;
 }
