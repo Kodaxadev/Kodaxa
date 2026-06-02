@@ -10,7 +10,41 @@ export type FieldHandle = { destroy: () => void };
 
 const LOGO_ASPECT = 248 / 340; // w/h of the mark texture
 
-export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean, glyph = 0): FieldHandle {
+// Render "KODAXA / INNOVATIONS" to a canvas → texture. White on transparent so
+// the dotboard samples it like the wolf (alpha = coverage).
+function makeWordmarkTexture(): THREE.CanvasTexture {
+  const W = 1024, H = 512;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const x = c.getContext('2d')!;
+  x.clearRect(0, 0, W, H);
+  x.fillStyle = '#ffffff';
+  x.textAlign = 'center';
+  x.textBaseline = 'middle';
+  // KODAXA — large, wide tracking
+  x.font = '700 188px Inter, system-ui, sans-serif';
+  drawTracked(x, 'KODAXA', W / 2, H * 0.36, 24);
+  // INNOVATIONS — smaller, matched width via heavier tracking
+  x.font = '500 86px Inter, system-ui, sans-serif';
+  drawTracked(x, 'INNOVATIONS', W / 2, H * 0.66, 22);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  return tex;
+}
+// Canvas has no letter-spacing on fillText cross-browser; draw glyph by glyph.
+function drawTracked(x: CanvasRenderingContext2D, s: string, cx: number, cy: number, tracking: number) {
+  const widths = [...s].map((ch) => x.measureText(ch).width + tracking);
+  const total = widths.reduce((a, b) => a + b, 0) - tracking;
+  let px = cx - total / 2;
+  for (let i = 0; i < s.length; i++) {
+    x.fillText(s[i], px + (widths[i] - tracking) / 2, cy);
+    px += widths[i];
+  }
+}
+
+export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean, glyph = 0, wordmark = false): FieldHandle {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   // ?reveal=full freezes the fully-revealed mark (design/debug aid).
   const frozen = reduced || new URLSearchParams(location.search).get('reveal') === 'full';
@@ -22,15 +56,18 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean, gly
   const scene = new THREE.Scene();
   const camera = new THREE.Camera();
 
-  // Hero uses a flare-trimmed mark: the eye's horizontal lens-flare streak in
-  // the original reads as an "eye laser" row of dots on the flip-dot board.
-  // The header/footer keep the original mark (the glint looks fine there).
-  const logoTex = new THREE.TextureLoader().load('/assets/brand/kodaxa-mark-hero.png', () => {
-    if (frozen) renderer.render(scene, camera); // re-render the still once loaded
-  });
-  logoTex.colorSpace = THREE.SRGBColorSpace;
-  logoTex.minFilter = THREE.LinearFilter;
-  logoTex.magFilter = THREE.LinearFilter;
+  // /work shows the brand wordmark; other boards show the wolf mark.
+  const logoTex = wordmark
+    ? makeWordmarkTexture()
+    : new THREE.TextureLoader().load('/assets/brand/kodaxa-mark-hero.png', () => {
+        if (frozen) renderer.render(scene, camera);
+      });
+  if (!wordmark) {
+    logoTex.colorSpace = THREE.SRGBColorSpace;
+    logoTex.minFilter = THREE.LinearFilter;
+    logoTex.magFilter = THREE.LinearFilter;
+  }
+  const WORDMARK_ASPECT = 1024 / 512;
 
   const uniforms: Record<string, THREE.IUniform> = {
     uRes: { value: new THREE.Vector2(1, 1) },
@@ -40,11 +77,20 @@ export function startWebglField(canvas: HTMLCanvasElement, ambient: boolean, gly
     uLogo: { value: logoTex },
     uLogoRect: { value: new THREE.Vector4(0.55, 0.13, 0.3, 0.74) },
     uGlyph: { value: glyph },
+    // 0 = rotate reveal style each cycle; ?style=N forces one style (QA aid).
+    uReveal: { value: Number(new URLSearchParams(location.search).get('style')) || 0 },
+    uWordmark: { value: wordmark ? 1 : 0 },
   };
 
-  // Place the mark center-right (clear of the headline), preserving aspect.
+  // Place the mark, preserving aspect. Wordmark = wide, centred, sized by width.
   const placeLogo = (w: number, h: number) => {
     const canvasAspect = w / Math.max(h, 1);
+    if (wordmark) {
+      const wFrac = 0.82;                                   // wordmark width fraction
+      const hFrac = (wFrac / WORDMARK_ASPECT) * canvasAspect;
+      (uniforms.uLogoRect.value as THREE.Vector4).set(0.5 - wFrac / 2, 0.5 - hFrac / 2, wFrac, hFrac);
+      return;
+    }
     const hFrac = ambient ? 0.6 : 0.78;             // mark height as fraction of canvas
     const wFrac = (hFrac * LOGO_ASPECT) / canvasAspect;
     const cx = ambient ? 0.5 : 0.68;                // centre x
